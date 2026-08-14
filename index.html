@@ -819,32 +819,34 @@ async function loadAllFromSharePoint(token){
   ['명단','어필시트','평가기록','설정'].forEach(n=>{if(!lists[n])throw new Error(`SharePoint 리스트 '${n}'을(를) 찾을 수 없습니다`);});
   GS={token,siteId,lists};
 
+  /* 주의: 이 4개 리스트는 Excel 가져오기로 생성되어 SharePoint 내부 필드명이 한글 표시명이 아니라
+     field_1, field_2... 형태로 자동 부여되어 있음(2026-08-14 REST API로 직접 확인). 아래 매핑은 그 내부명 기준. */
   const rosterItems=await fetchAllItems(token,siteId,lists['명단']);
   ROSTER=rosterItems.map(it=>{const f=it.fields||{};return{
-    spId:it.id,name:f.Title||'',email:(f.계정||'').toLowerCase(),
-    team:f.소속팀||'',rank:f.직급||'',group:f.그룹||'',
-    e1:f['1차평가자']||'',e2:f['2차평가자']||'',e3:f['3차평가자']||'',
-    teamLead:f.팀장여부==='예',forceExempt:f.분포예외==='예',evalTarget:f.평가대상==='예',
-    note:f.비고||'',demo:false
+    spId:it.id,name:f.Title||'',email:(f.field_1||'').toLowerCase(),
+    team:f.field_2||'',rank:f.field_3||'',group:f.field_4||'',
+    e1:f.field_8||'',e2:f.field_9||'',e3:f.field_10||'',
+    teamLead:f.field_6==='예',forceExempt:f.field_7==='예',evalTarget:f.field_5==='예',
+    note:f.field_11||'',demo:false
   };}).filter(r=>r.name);
 
   const appealItems=await fetchAllItems(token,siteId,lists['어필시트']);
   APPEALS=appealItems.map(it=>{const f=it.fields||{};return{
-    spId:it.id,period:f.Title||'',targetEmail:(f.대상자||'').toLowerCase(),empName:f.대상자성명||'',
-    empTeam:f.소속팀||'',empRank:f.직급||'',core:f.핵심성과||'',collab:f.협업기여||'',
-    challenge:f.도전개선||'',goal:f.차기목표||'',status:f.상태||'',submittedAt:f.제출일시||''
+    spId:it.id,period:f.Title||'',targetEmail:(f.field_1||'').toLowerCase(),empName:f.field_2||'',
+    empTeam:f.field_3||'',empRank:f.field_4||'',core:f.field_5||'',collab:f.field_6||'',
+    challenge:f.field_7||'',goal:f.field_8||'',status:f.field_9||'',submittedAt:f.field_10||''
   };}).filter(a=>a.targetEmail&&a.targetEmail!=='example@ymfood.com');
 
   const evalItems=await fetchAllItems(token,siteId,lists['평가기록']);
   EVALS=evalItems.map(it=>{const f=it.fields||{};return{
-    spId:it.id,period:f.Title||'',targetEmail:(f.대상자||'').toLowerCase(),empName:f.대상자성명||'',
-    empTeam:f.소속팀||'',evaluatorEmail:(f.평가자||'').toLowerCase(),evaluatorName:f.평가자성명||'',
-    evalStage:f.평가단계||'',grade:f.등급||'',factor:Number(f.계수)||1,
-    comment:f.코멘트||'',status:f.상태||'',submittedAt:f.제출일시||''
+    spId:it.id,period:f.Title||'',targetEmail:(f.field_1||'').toLowerCase(),empName:f.field_2||'',
+    empTeam:f.field_3||'',evaluatorEmail:(f.field_4||'').toLowerCase(),evaluatorName:f.field_5||'',
+    evalStage:f.field_6||'',grade:f.field_7||'',factor:Number(f.field_8)||1,
+    comment:f.field_9||'',status:f.field_10||'',submittedAt:f.field_11||''
   };}).filter(x=>x.targetEmail&&x.targetEmail!=='example@ymfood.com');
 
   const settingItems=await fetchAllItems(token,siteId,lists['설정']);
-  SETTINGS={};settingItems.forEach(it=>{const f=it.fields||{};if(f.Title)SETTINGS[f.Title]=f.값||'';});
+  SETTINGS={};settingItems.forEach(it=>{const f=it.fields||{};if(f.Title)SETTINGS[f.Title]=f.field_1||'';});
   if(SETTINGS['현재평가기간'])document.getElementById('period').value=SETTINGS['현재평가기간'];
   CFG=Object.assign({},CFG_DEFAULT);
 
@@ -1130,27 +1132,30 @@ function guardGrade(p){
 }
 
 /* ================= 제출 공통 (Microsoft Graph → SharePoint 리스트) ================= */
+/* 주의: SharePoint 내부 필드명이 field_N이라 쓰기(POST/PATCH) 시에도 field_N 키를 사용해야 함. */
 async function upsertAppeal(p,status){
-  const fields={Title:p.period,대상자:myEmail,대상자성명:p.empName,소속팀:p.empTeam,직급:p.empRank,
-    핵심성과:p.core,협업기여:p.collab,도전개선:p.challenge,차기목표:p.goal,상태:status,
-    제출일시:new Date().toISOString()};
+  const submittedAt=new Date().toISOString();
+  const fields={Title:p.period,field_1:myEmail,field_2:p.empName,field_3:p.empTeam,field_4:p.empRank,
+    field_5:p.core,field_6:p.collab,field_7:p.challenge,field_8:p.goal,field_9:status,
+    field_10:submittedAt};
   const existing=APPEALS.find(a=>a.period===p.period&&a.targetEmail===myEmail);
   if(existing){await updateItem(GS.token,GS.siteId,GS.lists['어필시트'],existing.spId,fields);
-    Object.assign(existing,{empName:p.empName,empTeam:p.empTeam,empRank:p.empRank,core:p.core,collab:p.collab,challenge:p.challenge,goal:p.goal,status,submittedAt:fields.제출일시});}
+    Object.assign(existing,{empName:p.empName,empTeam:p.empTeam,empRank:p.empRank,core:p.core,collab:p.collab,challenge:p.challenge,goal:p.goal,status,submittedAt});}
   else{const r=await createItem(GS.token,GS.siteId,GS.lists['어필시트'],fields);
-    APPEALS.push({spId:r.id,period:p.period,targetEmail:myEmail,empName:p.empName,empTeam:p.empTeam,empRank:p.empRank,core:p.core,collab:p.collab,challenge:p.challenge,goal:p.goal,status,submittedAt:fields.제출일시});}
+    APPEALS.push({spId:r.id,period:p.period,targetEmail:myEmail,empName:p.empName,empTeam:p.empTeam,empRank:p.empRank,core:p.core,collab:p.collab,challenge:p.challenge,goal:p.goal,status,submittedAt});}
   rebuildLog();renderAgg();
 }
 async function upsertEval(p,status){
   const r=emp(p.empName);const targetEmail=(r&&r.email)||'';
-  const fields={Title:p.period,대상자:targetEmail,대상자성명:p.empName,소속팀:p.empTeam,
-    평가자:myEmail,평가자성명:varName,평가단계:p.evalStage,등급:p.grade,계수:p.factor,
-    코멘트:p.comment,상태:status,제출일시:new Date().toISOString()};
+  const submittedAt=new Date().toISOString();
+  const fields={Title:p.period,field_1:targetEmail,field_2:p.empName,field_3:p.empTeam,
+    field_4:myEmail,field_5:varName,field_6:p.evalStage,field_7:p.grade,field_8:p.factor,
+    field_9:p.comment,field_10:status,field_11:submittedAt};
   const existing=EVALS.find(x=>x.period===p.period&&x.targetEmail===targetEmail&&x.evaluatorEmail===myEmail);
   if(existing){await updateItem(GS.token,GS.siteId,GS.lists['평가기록'],existing.spId,fields);
-    Object.assign(existing,{empName:p.empName,empTeam:p.empTeam,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,status,submittedAt:fields.제출일시});}
+    Object.assign(existing,{empName:p.empName,empTeam:p.empTeam,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,status,submittedAt});}
   else{const res=await createItem(GS.token,GS.siteId,GS.lists['평가기록'],fields);
-    EVALS.push({spId:res.id,period:p.period,targetEmail,empName:p.empName,empTeam:p.empTeam,evaluatorEmail:myEmail,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,status,submittedAt:fields.제출일시});}
+    EVALS.push({spId:res.id,period:p.period,targetEmail,empName:p.empName,empTeam:p.empTeam,evaluatorEmail:myEmail,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,status,submittedAt});}
   rebuildLog();
 }
 function rebuildLog(){
