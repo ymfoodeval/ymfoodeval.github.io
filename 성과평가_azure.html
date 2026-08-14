@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" id="themeColor" content="#c2410c" />
+<title>영미산업 성과평가 · 어필/평가 시트 (Azure AD)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
+<style>
+
+  :root{
+    --brand1:#fb7d2b; --brand2:#c2410c; --brand3:#ffedd5;
+    --bg1:#fb7d2b; --bg2:#c2410c;
+    --ink:#151b24; --ink-2:#0b0e13; --ink-3:#1c242e; --muted:#55606f;
+    --line:#e6e1da; --line-2:#f0ece5;
+    --card:#ffffff; --field:rgba(255,255,255,.80); --soft:rgba(255,255,255,.34); --soft2:rgba(255,255,255,.30);
+    --track:rgba(0,0,0,.07); --code-bg:rgba(0,0,0,.06); --note-ink:#4a5867; --logo-bg:#ffffff;
+    --gd-b-bg:#eef1f6; --gd-b-ink:#425065; --gd-c-bg:#f2ede9; --gd-c-ink:#8a6a4b;
+    --policy-ink:#6e4e15;
+    --glass-hi:rgba(255,255,255,.95); --glass-tint:rgba(255,255,255,.55);
+    /* Liquid Glass */
+    --glass-card:rgba(255,255,255,.60); --glass-card-2:rgba(255,255,255,.40);
+    --glass-edge:rgba(255,255,255,.65); --glass-edge-hi:rgba(255,255,255,.95);
+    --glass-inner:rgba(255,255,255,.42); --glass-inner-2:rgba(255,255,255,.26);
+    --blur:30px; --sat:190%;
+    --gold:#a8590f; --gold-soft:#fdecd2; --gold-line:#f0c27b;
+    --ok:#1f8a4c; --ok-soft:#e3f6ea; --warn:#c2410c; --warn-soft:#ffe8d6;
+    --bad:#c0392b; --bad-soft:#fbe4e1;
+    --radius:18px; --shadow:0 22px 50px rgba(154,52,18,.18),0 4px 14px rgba(0,0,0,.06);
+  }
+  /* ---------- 다크모드 ---------- */
+  body.dark{
+    --brand1:#ff8c3a; --brand2:#ffab5c; --brand3:rgba(255,150,70,.24);
+    --bg1:#2b1a0c; --bg2:#0d111a;
+    --ink:#ffffff; --ink-2:#ffffff; --ink-3:#f2f6fb; --muted:#d3ddea;
+    --line:#3c4553; --line-2:#2b323d;
+    --card:#1a2029; --field:rgba(12,17,24,.62); --soft:rgba(255,255,255,.05); --soft2:rgba(255,255,255,.04);
+    --track:rgba(255,255,255,.1); --code-bg:rgba(255,255,255,.09); --note-ink:#e6edf5; --logo-bg:#f3f5f8;
+    --gd-b-bg:rgba(255,255,255,.16); --gd-b-ink:#e3eaf3; --gd-c-bg:rgba(255,190,120,.2); --gd-c-ink:#ffca8f;
+    --policy-ink:#ffd79a;
+    --glass-hi:rgba(255,255,255,.5); --glass-tint:rgba(255,255,255,.16);
+    --glass-card:rgba(22,28,38,.56); --glass-card-2:rgba(16,21,29,.44);
+    --glass-edge:rgba(255,255,255,.16); --glass-edge-hi:rgba(255,255,255,.34);
+    --glass-inner:rgba(255,255,255,.07); --glass-inner-2:rgba(255,255,255,.04);
+    --gold:#ffc266; --gold-soft:rgba(255,180,70,.22); --gold-line:rgba(255,180,70,.5);
+    --ok:#4fe088; --ok-soft:rgba(60,220,130,.22); --warn:#ffb05c; --warn-soft:rgba(255,150,60,.22);
+    --bad:#ff7d72; --bad-soft:rgba(255,100,90,.24);
+    --shadow:0 22px 50px rgba(0,0,0,.5),0 4px 14px rgba(0,0,0,.32);
+  }
+  /* ---- 다크모드 가독성 보강: 유리 위 글자는 흰색 / 강조는 주황 ---- */
+  body.dark{color:#fff}
+  body.dark .card h2,body.dark .brand b,body.dark .coreblock .ttl,
+  body.dark label.lb,body.dark .ro .kv span,body.dark table.agg td{color:#fff}
+  body.dark .sec-eyebrow,body.dark .ro .kv b,body.dark .dpill b,
+  body.dark .prevbox .h,body.dark .policy b{color:var(--brand2)}
+  body.dark .card .sub,body.dark .hint,body.dark .brand span,
+  body.dark .period-row label,body.dark table.agg th,
+  body.dark .gauge .cap,body.dark .dpill span,body.dark .empty{color:var(--muted)}
+  body.dark .card,body.dark .header-card{text-shadow:0 1px 2px rgba(0,0,0,.35)}
+  /* 색이 들어간 글자만 채도·명도 보강 (흰색 텍스트는 그대로) */
+  body.dark .sec-eyebrow,body.dark .ro .kv b,body.dark .dpill b,body.dark .prevbox .h,
+  body.dark .policy b,body.dark .chip,body.dark .note code,body.dark .gd,
+  body.dark .verdict,body.dark .capnote,body.dark .btn.primary,body.dark nav.tabs button.on{
+    filter:saturate(1.35) brightness(1.06);
+  }
+  body.dark .foot{color:rgba(255,255,255,.8);text-shadow:0 1px 3px rgba(0,0,0,.5)}
+  body.dark .chip{background:var(--brand3);color:var(--brand2);border:1px solid rgba(255,160,80,.35)}
+  body.dark .chip small{color:var(--brand1)}
+  body.dark .gopt .box .g{color:#fff}
+  body.dark .gopt .box .f{color:var(--muted)}
+  body.dark .note code{color:var(--brand2)}
+  body.dark select.per option,body.dark select.tx option{background:#1a2029;color:#fff}
+  input.tx::placeholder,textarea.tx::placeholder{color:var(--muted);opacity:.9}
+  body.dark input.tx::placeholder,body.dark textarea.tx::placeholder{color:#9fadbd;opacity:1}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Noto Sans KR',
+      'Pretendard','Pretendard Variable','Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+    background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%);
+    transition:background .3s ease,color .3s ease;
+    background-attachment:fixed;
+    color:var(--ink); line-height:1.5;
+    font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
+    padding:20px 16px 90px;
+    position:relative;min-height:100vh;
+  }
+  /* ---- 유리 뒤로 비치는 컬러 월페이퍼 ---- */
+  body::before{
+    content:'';position:fixed;inset:-15%;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(42% 42% at 12% 18%,rgba(255,196,120,.95) 0%,rgba(255,196,120,0) 62%),
+      radial-gradient(45% 45% at 82% 12%,rgba(255,110,60,.9) 0%,rgba(255,110,60,0) 60%),
+      radial-gradient(50% 50% at 78% 82%,rgba(196,60,110,.75) 0%,rgba(196,60,110,0) 62%),
+      radial-gradient(46% 46% at 22% 88%,rgba(120,80,220,.6) 0%,rgba(120,80,220,0) 62%),
+      radial-gradient(38% 38% at 50% 50%,rgba(255,225,180,.55) 0%,rgba(255,225,180,0) 65%);
+    filter:blur(50px) saturate(150%);
+    opacity:.95;
+    animation:drift 26s ease-in-out infinite alternate;
+  }
+  body.dark::before{
+    background:
+      radial-gradient(42% 42% at 12% 18%,rgba(255,140,60,.5) 0%,rgba(255,140,60,0) 62%),
+      radial-gradient(45% 45% at 82% 12%,rgba(190,50,90,.45) 0%,rgba(190,50,90,0) 60%),
+      radial-gradient(50% 50% at 78% 82%,rgba(80,60,200,.5) 0%,rgba(80,60,200,0) 62%),
+      radial-gradient(46% 46% at 22% 88%,rgba(20,120,190,.42) 0%,rgba(20,120,190,0) 62%);
+    opacity:.85;
+  }
+  @keyframes drift{
+    0%{transform:translate3d(0,0,0) scale(1)}
+    50%{transform:translate3d(2%,-2.5%,0) scale(1.06)}
+    100%{transform:translate3d(-2%,2%,0) scale(1.02)}
+  }
+  @media(prefers-reduced-motion:reduce){body::before{animation:none}}
+  .wrap{max-width:1180px;margin:0 auto;position:relative;z-index:1}
+    /* ---- Liquid Glass 패널 ---- */
+  .header-card,.card{
+    position:relative;isolation:isolate;
+    background:linear-gradient(160deg,var(--glass-card) 0%,var(--glass-card-2) 100%);
+    backdrop-filter:blur(var(--blur)) saturate(var(--sat));
+    -webkit-backdrop-filter:blur(var(--blur)) saturate(var(--sat));
+    border:1px solid var(--glass-edge);
+    box-shadow:
+      0 1px 0 var(--glass-edge-hi) inset,
+      0 -18px 30px rgba(255,255,255,.06) inset,
+      0 4px 10px rgba(20,10,5,.06),
+      var(--shadow);
+  }
+  /* 상단 굴절 하이라이트 */
+  .header-card::before,.card::before{
+    content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;
+    background:linear-gradient(140deg,rgba(255,255,255,.4) 0%,rgba(255,255,255,.08) 26%,rgba(255,255,255,0) 52%);
+  }
+  .header-card>*,.card>*{position:relative;z-index:1}
+  .header-card{border-radius:26px;padding:22px 26px 20px;margin-bottom:20px}
+  .header-bar{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;flex-direction:column;gap:4px}
+  .brand b{font-size:27px;letter-spacing:-.015em;color:var(--ink)}
+  .brand span{font-size:14px;color:var(--muted);font-weight:500}
+  .ver{margin-left:4px;font-size:11px;font-weight:800;background:linear-gradient(135deg,var(--brand1),var(--brand2));
+    color:#fff;padding:3px 10px;border-radius:20px;vertical-align:middle}
+  .logo{height:46px;width:auto;display:block;border-radius:10px;background:var(--logo-bg);padding:4px 12px;
+    box-shadow:0 6px 16px rgba(154,52,18,.14)}
+  .logo-col{display:flex;flex-direction:column;align-items:flex-end;gap:9px}
+  .themebtn{
+    cursor:pointer;font-family:inherit;
+    display:inline-flex;align-items:center;gap:7px;
+    padding:8px 16px;border-radius:16px;font-size:13px;font-weight:700;
+    color:var(--ink-2);border:1px solid rgba(255,255,255,.5);
+    background:rgba(255,255,255,.45);
+    backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
+    box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 6px 18px rgba(20,10,5,.1);
+    transition:background .2s ease,border-color .2s ease,transform .2s ease;
+  }
+  .themebtn:hover{background:rgba(255,255,255,.72);border-color:rgba(255,255,255,.8);transform:translateY(-1px)}
+  body.dark .themebtn{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff}
+  body.dark .themebtn:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.34)}
+  .themebtn .ico{font-size:13px;line-height:1}
+  .period-row{display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--glass-edge)}
+  .period-row label{font-size:14px;font-weight:700;color:var(--muted)}
+  select.per,select.tx{
+    -webkit-appearance:none;appearance:none;
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1l6 6 6-6' fill='none' stroke='%236b7688' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>"),
+      radial-gradient(115% 150% at 22% 14%,var(--glass-hi) 0%,var(--glass-tint) 26%,rgba(255,255,255,0) 56%),
+      linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0));
+    background-position:right 15px center,0 0,0 0;
+    background-size:14px 9px,auto,auto;
+    background-repeat:no-repeat;
+    background-color:var(--field);
+    border-radius:999px;
+    box-shadow:0 1px 1px rgba(255,255,255,.8) inset,0 -5px 9px rgba(30,20,10,.05) inset,0 6px 14px rgba(30,20,10,.09);
+    cursor:pointer;
+  }
+  body.dark select.per,body.dark select.tx{
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1l6 6 6-6' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>"),
+      radial-gradient(115% 150% at 22% 14%,var(--glass-hi) 0%,var(--glass-tint) 26%,rgba(255,255,255,0) 56%),
+      linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,0));
+    box-shadow:0 1px 1px rgba(255,255,255,.22) inset,0 -5px 9px rgba(0,0,0,.25) inset,0 6px 14px rgba(0,0,0,.3);
+  }
+  select.per{
+    color:var(--ink);border:1px solid var(--glass-edge);
+    padding:9px 34px 9px 16px;font-size:14px;font-weight:700;font-family:inherit
+  }
+  select.per:focus,select.tx:focus{outline:none;border-color:var(--brand1);box-shadow:0 1px 1px rgba(255,255,255,.8) inset,0 0 0 3px var(--brand3),0 8px 18px rgba(30,20,10,.12)}
+  nav.tabs{display:flex;gap:10px;margin:0 0 20px;flex-wrap:wrap}
+  nav.tabs button{
+    border:1px solid rgba(255,255,255,.4);
+    background:rgba(255,255,255,.18);
+    backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
+    color:#fff;
+    padding:12px 22px;border-radius:16px;font-size:14px;font-weight:700;
+    cursor:pointer;font-family:inherit;display:flex;gap:8px;align-items:center;
+    transition:background .2s ease,border-color .2s ease,transform .2s ease,box-shadow .2s ease;
+    box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 6px 18px rgba(0,0,0,.12);
+    text-shadow:0 1px 2px rgba(0,0,0,.18);
+  }
+  nav.tabs button .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.7)}
+  nav.tabs button:not(.on):hover{background:rgba(255,255,255,.32);border-color:rgba(255,255,255,.6);transform:translateY(-1px)}
+  nav.tabs button.on{background:rgba(255,255,255,.85);border-color:rgba(255,255,255,.9);
+    color:var(--brand2);text-shadow:none;
+    box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 10px 24px rgba(0,0,0,.18)}
+  nav.tabs button.on .dot{background:var(--brand1)}
+  body.dark nav.tabs button.on{background:rgba(255,255,255,.16);border-color:rgba(251,146,60,.7);
+    color:var(--brand2);box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 10px 24px rgba(0,0,0,.4)}
+
+  .card{border-radius:var(--radius);padding:24px 26px;margin-bottom:18px}
+  .card h2{margin:0 0 5px;font-size:22px;color:var(--ink);letter-spacing:-.01em;font-weight:800}
+  .card .sub{margin:0 0 20px;font-size:13.5px;color:var(--muted)}
+  .sec-eyebrow{font-size:18px;font-weight:800;letter-spacing:-.01em;color:var(--brand2);
+    text-transform:none;margin-bottom:13px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.full{grid-column:1/-1}
+  label.lb{font-size:14.5px;font-weight:800;color:var(--ink-2)}
+  label.lb .req{color:var(--bad);margin-left:2px}
+  input.tx,select.tx,textarea.tx{
+    border:1px solid var(--glass-edge);border-radius:14px;padding:12px 14px;font-size:14px;
+    font-family:inherit;color:var(--ink);background:var(--field);width:100%;transition:.18s
+  }
+  input.tx,textarea.tx,select.tx,select.per{
+    backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);
+  }
+  input.tx,textarea.tx{
+    background-image:radial-gradient(120% 150% at 22% 10%,var(--glass-tint) 0%,rgba(255,255,255,0) 48%);
+    box-shadow:0 1px 1px rgba(255,255,255,.7) inset,0 4px 10px rgba(30,20,10,.05);
+  }
+  select.tx{padding:12px 34px 12px 14px}
+  input.tx[readonly]{background-color:var(--soft);color:var(--muted);cursor:default;
+    border-style:dashed;border-color:var(--glass-edge)}
+  input.tx#ap_name_fixed{color:var(--ink);font-weight:800;font-size:15px;border-style:solid;
+    background:linear-gradient(160deg,var(--glass-tint),rgba(255,255,255,0))}
+  textarea.tx{resize:vertical;min-height:64px;line-height:1.55}
+  textarea.core{min-height:104px}
+  input.tx:focus,textarea.tx:focus{
+    outline:none;border-color:var(--brand1);box-shadow:0 1px 1px rgba(255,255,255,.7) inset,0 0 0 3px var(--brand3)}
+  .hint{font-size:12.5px;color:var(--muted)}
+  .maprow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:2px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--brand3);
+    color:var(--brand2);border:none;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700}
+  .chip small{color:var(--brand1);font-weight:800;font-size:10px}
+  .chip.brass{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold)}
+  .chip.ghost{
+    position:relative;isolation:isolate;overflow:hidden;
+    border:1px solid rgba(255,255,255,.6);
+    background:
+      radial-gradient(120% 160% at 26% 16%,rgba(255,255,255,.9) 0%,rgba(255,255,255,.3) 32%,rgba(255,255,255,0) 55%),
+      linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.24));
+    backdrop-filter:blur(14px) saturate(180%);-webkit-backdrop-filter:blur(14px) saturate(180%);
+    color:var(--muted);
+    box-shadow:0 1px 1px rgba(255,255,255,.75) inset,0 -4px 8px rgba(30,20,10,.04) inset,0 6px 14px rgba(30,20,10,.1);
+  }
+    .coreblock{border:1px solid var(--glass-edge);border-radius:16px;padding:15px;margin-bottom:12px;
+    background:linear-gradient(160deg,var(--glass-inner),var(--glass-inner-2));
+    box-shadow:0 1px 0 var(--glass-edge-hi) inset,0 6px 16px rgba(20,10,5,.05)}
+  .coreblock .n{display:inline-flex;width:25px;height:25px;border-radius:7px;background:linear-gradient(135deg,var(--brand1),var(--brand2));
+    color:#fff;font-size:13px;font-weight:800;align-items:center;justify-content:center;margin-right:9px}
+  .coreblock .ttl{font-size:16px;font-weight:800;color:var(--ink);margin-bottom:10px;display:flex;align-items:center}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+
+  /* ================= 글래스모피즘 버튼 =================
+     통일 규칙: rgba 흰색 배경 + 1px rgba 흰색 테두리 + border-radius 16px
+     + backdrop-filter 블러. hover/focus 시 흰색 투명도를 높여 반응. */
+  .btn{
+    border:1px solid rgba(255,255,255,.5);
+    background:rgba(255,255,255,.55);
+    backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
+    color:var(--ink);
+    padding:12px 22px;border-radius:16px;
+    font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+    transition:background .2s ease,border-color .2s ease,transform .2s ease,box-shadow .2s ease;
+    box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 6px 20px rgba(20,10,5,.1);
+  }
+  .btn:hover{background:rgba(255,255,255,.78);border-color:rgba(255,255,255,.75);
+    transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.75) inset,0 10px 26px rgba(20,10,5,.14)}
+  .btn:active{transform:translateY(0);background:rgba(255,255,255,.62)}
+  .btn:focus-visible{outline:none;border-color:var(--brand1);box-shadow:0 0 0 3px var(--brand3)}
+
+  /* 주요 액션 (로그인 · 제출) — 투명 유리 + 영미산업 주황 글자 */
+  .btn.primary{
+    background:rgba(255,255,255,.58);
+    border-color:rgba(251,125,43,.55);
+    color:var(--brand2);
+    box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 6px 20px rgba(194,65,12,.16);
+  }
+  .btn.primary:hover{background:rgba(255,255,255,.85);border-color:rgba(251,125,43,.85);
+    box-shadow:0 1px 0 rgba(255,255,255,.85) inset,0 10px 26px rgba(194,65,12,.22)}
+  .btn.primary:active{background:rgba(255,255,255,.7)}
+
+  .btn.brass{background:rgba(255,255,255,.5);border-color:rgba(168,89,15,.5);color:var(--gold)}
+  .btn.brass:hover{background:rgba(255,255,255,.78);border-color:rgba(168,89,15,.8)}
+
+  .btn.ghost{background:rgba(255,255,255,.34);border-color:rgba(255,255,255,.42);color:var(--ink-2)}
+  .btn.ghost:hover{background:rgba(255,255,255,.6);border-color:rgba(255,255,255,.7)}
+
+  /* ---- 다크모드 버튼 ---- */
+  body.dark .btn{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff;
+    box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 6px 20px rgba(0,0,0,.35)}
+  body.dark .btn:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.34)}
+  body.dark .btn:active{background:rgba(255,255,255,.14)}
+  body.dark .btn.primary{background:rgba(255,255,255,.1);border-color:rgba(251,146,60,.6);color:var(--brand2)}
+  body.dark .btn.primary:hover{background:rgba(251,146,60,.22);border-color:rgba(251,146,60,.9)}
+  body.dark .btn.brass{border-color:rgba(240,194,123,.5);color:var(--gold)}
+  body.dark .btn.ghost{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16);color:#dbe4ee}
+  body.dark .btn.ghost:hover{background:rgba(255,255,255,.16)}
+
+    .ro{background:linear-gradient(160deg,var(--glass-inner),var(--glass-inner-2));
+    border:1px solid var(--glass-edge);border-radius:16px;padding:14px 16px;
+    box-shadow:0 1px 0 var(--glass-edge-hi) inset}
+  .ro .kv{font-size:14px;margin:0 0 8px;padding-bottom:8px;border-bottom:1px dashed var(--line)}
+  .ro .kv:last-child{border:0;margin-bottom:0;padding-bottom:0}
+  .ro .kv b{color:var(--brand2);display:block;font-size:13px;margin-bottom:3px;font-weight:800}
+  .ro .kv span{color:var(--ink-3);white-space:pre-wrap}
+  .prevbox{border-left:3px solid var(--gold-line);background:var(--gold-soft);
+    border-radius:0 12px 12px 0;padding:12px 14px;margin-top:12px}
+  .prevbox .h{font-size:13px;font-weight:800;color:var(--gold);letter-spacing:.04em;margin-bottom:8px}
+  .grades{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px}
+  .gopt{position:relative}
+  .gopt input{position:absolute;opacity:0;inset:0;cursor:pointer}
+    .gopt .box{border:1px solid var(--glass-edge);border-radius:16px;padding:12px 8px;text-align:center;
+    cursor:pointer;transition:.18s;
+    background:linear-gradient(160deg,var(--glass-inner),var(--glass-inner-2));
+    box-shadow:0 1px 0 var(--glass-edge-hi) inset,0 6px 14px rgba(20,10,5,.05)}
+  .gopt .box:hover{transform:translateY(-1px)}
+  .gopt .box .g{font-size:22px;font-weight:800;color:var(--ink);line-height:1}
+  .gopt .box .f{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600}
+  .gopt input:checked+.box{border-color:var(--brand1);background:var(--brand3);box-shadow:0 0 0 3px rgba(251,125,43,.2)}
+  .gopt.s input:checked+.box{border-color:var(--gold);background:var(--gold-soft);box-shadow:0 0 0 3px rgba(168,89,15,.18)}
+  .gopt input:disabled+.box{opacity:.4;cursor:not-allowed}
+  .gopt .lockmsg{font-size:10px;color:var(--gold);text-align:center;margin-top:4px;font-weight:700}
+  .capnote{margin-top:10px;font-size:11.5px;color:var(--gold);background:var(--gold-soft);
+    border:1px solid var(--gold-line);border-radius:10px;padding:8px 11px;font-weight:700;display:none}
+  .capnote.show{display:block}
+  .gauge{margin-top:6px}
+  .gauge .track{position:relative;height:34px;border-radius:10px;background:var(--track);
+    border:1px solid var(--glass-edge);overflow:hidden}
+  .gauge .zone-ok{position:absolute;left:0;top:0;bottom:0;background:var(--ok-soft)}
+  .gauge .zone-over{position:absolute;top:0;bottom:0;right:0;background:var(--warn-soft)}
+  .gauge .baseline{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--brand2);z-index:3}
+  .gauge .baseline::after{content:'100% · B';position:absolute;top:-17px;left:50%;transform:translateX(-50%);
+    font-size:9.5px;font-weight:800;color:var(--brand2);white-space:nowrap}
+  .gauge .marker{position:absolute;top:50%;transform:translate(-50%,-50%);z-index:4;
+    background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;
+    box-shadow:0 3px 8px rgba(0,0,0,.18);transition:left .25s,background .2s;white-space:nowrap}
+  .gauge.over .marker{background:linear-gradient(135deg,#e0604d,var(--bad))}
+  .gauge .cap{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:16px}
+  .distrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .dpill{border:1px solid var(--glass-edge);border-radius:14px;padding:8px 12px;font-size:12px;min-width:78px;
+    background:linear-gradient(160deg,var(--glass-inner),var(--glass-inner-2));
+    box-shadow:0 1px 0 var(--glass-edge-hi) inset}
+  .dpill b{display:block;font-size:17px;color:var(--brand2);font-weight:800}
+  .dpill span{font-size:10.5px;color:var(--muted)}
+  .dpill.tgt{border-style:dashed}
+  .verdict{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:12.5px;font-weight:700;display:flex;gap:8px;align-items:center}
+  .verdict.ok{background:var(--ok-soft);color:var(--ok)}
+  .verdict.over{background:var(--bad-soft);color:var(--bad)}
+  table.agg{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.agg th,table.agg td{padding:9px 10px;border-bottom:1px solid var(--glass-edge);text-align:left}
+  table.agg th{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    background:linear-gradient(180deg,var(--glass-inner),var(--glass-inner-2));position:sticky;top:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  table.agg td .gd{font-weight:800;padding:2px 8px;border-radius:8px;font-size:11px}
+  .gd.S{background:var(--gold-soft);color:var(--gold)}
+  .gd.A{background:var(--brand3);color:var(--brand2)}
+  .gd.B{background:var(--gd-b-bg);color:var(--gd-b-ink)}
+  .gd.C{background:var(--gd-c-bg);color:var(--gd-c-ink)}
+  .empty{color:var(--muted);font-size:12.5px;text-align:center;padding:26px}
+  .setgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .note{background:linear-gradient(160deg,var(--glass-inner),var(--glass-inner-2));
+    border:1px solid var(--glass-edge);border-radius:16px;padding:13px 15px;font-size:12px;
+    color:var(--note-ink);line-height:1.6;box-shadow:0 1px 0 var(--glass-edge-hi) inset}
+  .note code{background:var(--code-bg);padding:1px 6px;border-radius:5px;font-size:11px;color:var(--brand2)}
+  .policy{background:var(--gold-soft);border:2px solid var(--gold-line);border-radius:14px;padding:13px 15px;font-size:12px;color:var(--policy-ink);line-height:1.7}
+  .policy b{color:var(--gold)}
+  code.mono{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace}
+  textarea.json{min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.5}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);
+    background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff;padding:13px 22px;border-radius:14px;font-size:13.5px;font-weight:700;
+    box-shadow:0 10px 30px rgba(0,0,0,.28);opacity:0;transition:.28s;z-index:60;pointer-events:none;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.warn{background:linear-gradient(135deg,#f0a94e,#c2740f)} .toast.bad{background:linear-gradient(135deg,#e0604d,var(--bad))}
+  .hidden{display:none!important}
+  .foot{text-align:center;color:rgba(255,255,255,.88);font-size:11.5px;margin-top:8px}
+  @media(max-width:720px){
+    .grid,.grid.three,.setgrid{grid-template-columns:1fr}
+    .grades{grid-template-columns:repeat(2,1fr)}
+    .header-bar{flex-direction:column}
+    .logo{height:36px}
+    .brand b{font-size:22px}
+  }
+
+
+/* ==================================================================
+   ver3 — 글래스모피즘 대시보드 셸 (ver2 스타일 위에 덮어쓰는 레이어)
+   ================================================================== */
+  body{padding:0;min-height:100vh;overflow-x:hidden;
+    background:linear-gradient(180deg,#ff9a33 0%,#ff7d10 46%,#ef6704 100%);}
+  body.dark{background:linear-gradient(180deg,#5a3009 0%,#3d2008 48%,#2a1505 100%)}
+  /* 기존 블롭 배경 끄고 물결로 대체 */
+  body::before{content:none!important}
+
+  /* ---------- 수면 물결(ripple) 배경 ---------- */
+  .waves{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  #rippleBg{position:absolute;inset:0;width:100%;height:100%;display:block;transform:translateZ(0)}
+
+  /* ---------- 앱 셸 ---------- */
+  .wrap{max-width:1280px;margin:0 auto;padding:26px 18px 40px;position:relative;z-index:1}
+  .app{
+    border-radius:24px;overflow:hidden;
+    background:rgba(255,255,255,.42);
+    border:1px solid rgba(255,255,255,.55);
+    backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+    box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 30px 70px rgba(90,35,5,.28);
+  }
+  body.dark .app{background:rgba(18,23,32,.5);border-color:rgba(255,255,255,.14);
+    box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 30px 70px rgba(0,0,0,.55)}
+
+  /* ---------- 헤더 ---------- */
+  .app-header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    padding:16px 22px;border-bottom:1px solid rgba(255,255,255,.45)}
+  body.dark .app-header{border-bottom-color:rgba(255,255,255,.12)}
+  .app-header .logo{height:58px;margin:0;padding:6px 16px}
+  .app-title{display:flex;flex-direction:column;gap:2px;margin-right:auto}
+  .app-title b{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.015em}
+  .app-title span{font-size:12.5px;color:var(--muted);font-weight:600}
+  .header-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .header-tools label{font-size:13px;font-weight:700;color:var(--ink-2)}
+
+  /* ---------- 본문 2단 ---------- */
+  .app-body{display:flex;align-items:stretch;min-height:600px}
+  .side{width:236px;flex:0 0 236px;padding:20px 14px 26px;
+    border-right:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.14)}
+  body.dark .side{border-right-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+  .side-title{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);padding:0 10px;margin:0 0 10px}
+  .side-wrap+.side-wrap{margin-top:24px}
+
+  /* 사이드 메뉴 = #tabs 버튼 */
+  nav.tabs{display:flex;flex-direction:column;gap:6px;margin:0}
+  nav.tabs button{
+    width:100%;justify-content:flex-start;text-align:left;
+    padding:11px 14px;border-radius:14px;font-size:14px;font-weight:700;
+    background:transparent;border:1px solid transparent;color:var(--ink-2);
+    backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;text-shadow:none;
+    transition:background .2s,border-color .2s,color .2s;
+  }
+  nav.tabs button:hover:not(.on){background:rgba(255,255,255,.42);border-color:rgba(255,255,255,.5);transform:none}
+  nav.tabs button.on{background:rgba(255,255,255,.72);border-color:rgba(255,255,255,.8);
+    color:var(--brand2);box-shadow:0 1px 0 rgba(255,255,255,.85) inset,0 6px 16px rgba(90,35,5,.12)}
+  nav.tabs button .dot{width:8px;height:8px;flex:0 0 8px;background:var(--muted)}
+  nav.tabs button.on .dot{background:var(--brand1)}
+  body.dark nav.tabs button{color:#e7eef7}
+  body.dark nav.tabs button:hover:not(.on){background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.16)}
+  body.dark nav.tabs button.on{background:rgba(255,255,255,.14);border-color:rgba(255,160,80,.6);color:var(--brand2)}
+
+  .side-note{margin-top:22px;padding:12px 13px;border-radius:14px;font-size:11.5px;line-height:1.6;
+    color:var(--muted);background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.45)}
+  body.dark .side-note{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+
+  .main{flex:1;min-width:0;padding:22px 24px 30px}
+
+  /* 내부 카드는 유리 위 유리 — 살짝만 */
+  .app .card{background:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.5);
+    backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);
+    box-shadow:0 1px 0 rgba(255,255,255,.65) inset,0 10px 26px rgba(90,35,5,.1)}
+  body.dark .app .card{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);
+    box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 10px 26px rgba(0,0,0,.35)}
+  .app .card::before{content:none}
+
+  .foot{margin:16px 0 0;color:rgba(255,255,255,.9);text-shadow:0 1px 3px rgba(90,35,5,.35)}
+
+  /* ---------- 로그인 화면 ---------- */
+  #loginScreen{max-width:410px;margin:8vh auto 0!important}
+  #loginScreen .header-card{
+    background:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.6);border-radius:24px;
+    backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+    box-shadow:0 1px 0 rgba(255,255,255,.75) inset,0 30px 70px rgba(90,35,5,.3);padding:34px 30px 30px}
+  body.dark #loginScreen .header-card{background:rgba(18,23,32,.55);border-color:rgba(255,255,255,.14)}
+  #loginScreen .header-card::before{content:none}
+  .login-theme{position:fixed;top:20px;right:22px;z-index:3}
+
+  @media(max-width:900px){
+    .app-body{flex-direction:column}
+    .side{width:auto;flex:none;border-right:none;border-bottom:1px solid rgba(255,255,255,.45)}
+    nav.tabs{flex-direction:row;flex-wrap:wrap}
+    nav.tabs button{width:auto}
+    .main{padding:18px 16px 26px}
+  }
+
+</style>
+</head>
+
+<body>
+
+<!-- ============ 배경: 느리게 흐르는 주황 물결 ============ -->
+<div class="waves" aria-hidden="true">
+  <canvas id="rippleBg"></canvas>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ 로그인 화면 ============ -->
+  <div id="loginScreen">
+    <div class="header-card" style="text-align:center">
+      <img class="logo" style="height:72px;margin:0 auto 20px;padding:8px 20px" src="data:image/png;base64,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" alt="영미산업(주)" />
+      <div style="font-size:21px;font-weight:800;color:var(--ink);margin-bottom:3px">영미산업 성과평가</div>
+      <div class="hint" style="margin-bottom:24px">영미산업 Microsoft 365 계정으로 로그인해 주세요</div>
+      <button class="btn primary" id="login_btn" style="width:100%">
+        <svg width="18" height="18" viewBox="0 0 21 21" style="vertical-align:-3px;margin-right:8px"><rect width="9" height="9" x="1" y="1" fill="#f25022"/><rect width="9" height="9" x="11" y="1" fill="#7fba00"/><rect width="9" height="9" x="1" y="11" fill="#00a4ef"/><rect width="9" height="9" x="11" y="11" fill="#ffb900"/></svg>
+        Microsoft 계정으로 로그인
+      </button>
+      <div class="hint" id="login_err" style="display:none;margin-top:12px;color:var(--bad)"></div>
+    </div>
+  </div>
+
+  <!-- ============ 앱 본문 ============ -->
+  <div id="app" class="hidden">
+    <div class="app">
+
+      <div class="app-header">
+        <img class="logo" src="data:image/png;base64,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" alt="영미산업(주)" />
+        <div class="app-title">
+          <b>성과평가 <span class="ver">Azure AD</span></b>
+          <span>본인 어필 기반 종합평가 · 보상 연계</span>
+        </div>
+        <div class="header-tools">
+          <label for="period">평가기간</label>
+          <select class="per" id="period">
+            <option value="2026-H1">2026 상반기</option>
+            <option value="2026-H2">2026 하반기</option>
+          </select>
+          <span class="chip ghost" id="whoami"></span>
+          <button class="themebtn" id="themeBtn" type="button" title="다크모드 전환">
+            <span class="ico" id="themeIco">☾</span><span id="themeTxt">다크모드</span>
+          </button>
+          <button class="btn ghost" id="logoutBtn" style="padding:8px 16px">로그아웃</button>
+        </div>
+      </div>
+
+      <div class="app-body">
+        <aside class="side">
+          <div class="side-wrap">
+            <div class="side-title">메뉴</div>
+            <nav class="tabs" id="tabs">
+              <button data-tab="appeal" class="on"><span class="dot"></span>본인 어필시트</button>
+              <button data-tab="eval"><span class="dot"></span>평가자 입력</button>
+              <button data-tab="agg"><span class="dot"></span>집계 · 예산</button>
+              <button data-tab="set"><span class="dot"></span>설정</button>
+            </nav>
+          </div>
+          <div class="side-note">
+            로그인한 계정의 권한에 따라 메뉴가 표시됩니다.<br />
+            문의: 경영관리팀 · 강태욱
+          </div>
+        </aside>
+
+        <main class="main">
+  <!-- ============ 본인 어필시트 ============ -->
+  <section id="tab-appeal">
+    <div class="card">
+      <h2>본인 어필시트</h2>
+      <p class="sub">스스로의 성과를 먼저 정리해 제출합니다. 제출하면 1차 평가자에게 자동으로 알림 링크가 전달돼 검토·피드백을 받습니다.</p>
+
+      <div class="sec-eyebrow">기본 정보</div>
+      <div class="grid">
+        <div class="field">
+          <label class="lb">본인 성명<span class="req">*</span></label>
+          <input class="tx" id="ap_name_fixed" readonly />
+          <select class="tx hidden" id="ap_name"><option value="">— 이름 선택 —</option></select>
+          <span class="hint hidden" id="ap_name_hint">로그인 계정이 명단에 없어 직접 선택합니다. (설정 &gt; 명단에 계정을 추가해 주세요)</span>
+        </div>
+        <div class="field">
+          <label class="lb">소속 · 직급</label>
+          <input class="tx" id="ap_teamrank" readonly placeholder="성명이 정해지면 자동 표시" />
+        </div>
+        <div class="field full">
+          <label class="lb">평가 라인 (자동 매핑)</label>
+          <div class="maprow" id="ap_map"><span class="chip ghost">이름을 선택하세요</span></div>
+        </div>
+      </div>
+
+      <div style="height:18px"></div>
+      <div class="sec-eyebrow">핵심 성과</div>
+      <p class="hint" style="margin:-4px 0 12px">이번 기간의 핵심 성과를 자유롭게 서술하세요. 무엇을 했는지 · 수치(정량지표) · 본인의 기여를 함께 담으면 좋습니다.</p>
+      <div class="field full">
+        <textarea class="tx" id="ap_core" placeholder="예: 6월 프로모션 단가검증 자동화로 오류 0건 달성 — 기존 수작업 대비 검토시간 3일→2시간 단축, 담당 100%"></textarea>
+      </div>
+
+      <div class="grid" style="margin-top:6px">
+        <div class="field full">
+          <label class="lb">협업 · 조직 기여</label>
+          <textarea class="tx" id="ap_collab" placeholder="부서 간 협업, 업무 개선·자동화, 후배 지원 등"></textarea>
+        </div>
+        <div class="field full">
+          <label class="lb">도전 · 개선점</label>
+          <textarea class="tx" id="ap_challenge" placeholder="시도한 도전과 배운 점 / 아쉬웠던 점"></textarea>
+        </div>
+        <div class="field full">
+          <label class="lb">차기 반기 목표</label>
+          <textarea class="tx" id="ap_goal" placeholder="다음 반기에 집중할 과제"></textarea>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:16px">
+        <button class="btn" id="ap_save">임시저장</button>
+        <button class="btn primary" id="ap_submit">제출하고 1차 평가자에게 보내기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 평가자 입력 ============ -->
+  <section id="tab-eval" class="hidden">
+    <div class="card">
+      <h2>평가자 입력</h2>
+      <p class="sub">담당 피평가자의 어필을 확인하고 등급·피드백을 입력합니다. 팀 분포와 예산 게이지가 실시간으로 표시됩니다.</p>
+      <div class="grid">
+        <div class="field">
+          <label class="lb">평가자 (본인)<span class="req">*</span></label>
+          <select class="tx" id="ev_evaluator"><option value="">— 평가자 선택 —</option></select>
+        </div>
+        <div class="field">
+          <label class="lb">피평가자<span class="req">*</span></label>
+          <select class="tx" id="ev_target"><option value="">— 먼저 평가자를 선택 —</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="ev_body">
+      <div class="sec-eyebrow">피평가자 어필 내용</div>
+      <div class="ro" id="ev_appeal"><span class="hint">해당 피평가자의 어필 제출 내역이 없습니다.</span></div>
+      <div id="ev_prev"></div>
+
+      <div style="height:18px"></div>
+      <div class="sec-eyebrow">등급 부여</div>
+      <div class="grades" id="ev_grades">
+        <label class="gopt s"><input type="radio" name="grade" value="S" id="g_s"><div class="box"><div class="g" style="color:var(--gold)">S</div><div class="f">120% · 특별</div></div><div class="lockmsg" id="s_lock">대표이사 전용</div></label>
+        <label class="gopt"><input type="radio" name="grade" value="A"><div class="box"><div class="g">A</div><div class="f">110% · 우수</div></div></label>
+        <label class="gopt"><input type="radio" name="grade" value="B" checked><div class="box"><div class="g">B</div><div class="f">100% · 표준</div></div></label>
+        <label class="gopt"><input type="radio" name="grade" value="C"><div class="box"><div class="g">C</div><div class="f">90% · 미흡</div></div></label>
+      </div>
+      <div class="capnote" id="cap_note"></div>
+
+      <div class="field full" style="margin-top:16px">
+        <label class="lb">피드백 코멘트<span class="req">*</span></label>
+        <textarea class="tx" id="ev_comment" placeholder="등급 근거와 강점·개선점을 구체적으로. 하반기 평가 시 이 코멘트가 참고 자료로 표시됩니다."></textarea>
+      </div>
+
+      <div style="height:18px"></div>
+      <div class="sec-eyebrow">팀 분포 · 예산 게이지 <span id="ev_teamname" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
+      <div class="gauge" id="ev_gauge">
+        <div class="track">
+          <div class="baseline" style="left:50%"></div>
+          <div class="marker" id="ev_marker" style="left:50%">1.00</div>
+        </div>
+        <div class="cap"><span>0.85</span><span style="color:var(--warn);font-weight:700">← 예산초과 구간</span><span>1.20</span></div>
+      </div>
+      <div class="distrow" id="ev_dist"></div>
+      <div class="verdict ok" id="ev_verdict">입력 시 팀 가중평균이 계산됩니다.</div>
+
+      <div class="actions" style="margin-top:16px">
+        <button class="btn" id="ev_save">저장</button>
+        <button class="btn primary" id="ev_submit">평가 제출 · 본인에게 피드백 통지</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 집계 · 예산 ============ -->
+  <section id="tab-agg" class="hidden">
+    <div class="card">
+      <h2>집계 · 예산</h2>
+      <p class="sub">관리자·대표이사 계정으로 로그인한 경우에만 이 탭에 접근할 수 있습니다.</p>
+
+      <div id="agg_content">
+        <div class="actions" style="margin:0 0 16px">
+          <button class="btn" id="ex_csv">CSV 내보내기 (Excel)</button>
+          <button class="btn" id="ex_json">JSON 내보내기</button>
+          <button class="btn ghost" id="ex_clear">SharePoint에서 새로고침</button>
+        </div>
+        <div id="agg_gauges"></div>
+        <div style="overflow:auto;border:1px solid var(--glass-edge);border-radius:14px;margin-top:14px">
+          <table class="agg" id="agg_table">
+            <thead><tr>
+              <th>기간</th><th>구분</th><th>대상</th><th>팀</th><th>평가자/차수</th><th>등급</th><th>코멘트</th><th>일시</th>
+            </tr></thead>
+            <tbody id="agg_body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 설정 ============ -->
+  <section id="tab-set" class="hidden">
+    <div class="card">
+      <h2>설정</h2>
+      <p class="sub">명단·권한은 SharePoint '명단' 리스트가 원본입니다. 이 화면은 현재 불러온 값을 확인하는 용도이며, 명단을 바꾸려면 SharePoint에서 직접 수정한 뒤 아래 '다시 불러오기'를 누르세요.</p>
+      <div class="setgrid">
+        <input class="tx hidden" id="set_paurl" value="" />
+        <div class="field">
+          <label class="lb">알림 발신용 표시 (메일 폴백 제목 접두)</label>
+          <input class="tx" id="set_mailtag" value="[영미산업 성과평가]" />
+        </div>
+        <div class="field full">
+          <label class="lb">명단 (SharePoint에서 불러온 값 · 읽기 전용 보기)</label>
+          <textarea class="tx json" id="set_roster" readonly style="min-height:220px"></textarea>
+          <span class="hint">계정 · 소속팀 · 직급 · 그룹 · 평가대상 · 팀장여부 · 분포예외 · 1차/2차/3차평가자는 SharePoint '명단' 리스트 값 그대로입니다. 로그인한 계정의 이메일이 명단의 '계정' 열과 일치해야 본인 인식·권한 판정이 됩니다.</span>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:14px">
+        <button class="btn ghost" id="set_reset">SharePoint에서 다시 불러오기</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-eyebrow">고정 정책 (ver2)</div>
+      <div class="policy">
+        <b>· S등급 = 별도재원 고정</b> — S는 팀 예산 가중평균(B=100%) 계산에서 <b>완전히 제외</b>되며, 전사 경영성과 재원에서 별도 지급됩니다. 팀 분포·예산은 훼손되지 않습니다.<br>
+        <b>· S 부여 권한 = 대표이사 단독</b> — group이 '대표'인 사람만 S를 선택할 수 있습니다.<br>
+        <b>· S 상한 = 전사 인원의 5% 이하</b> — 초과 시 시스템이 경고합니다.<br>
+        <b>· 팀 성과(팀장 평가) 상한 = A(110%)</b> — 팀장(=팀 평가) 대상에는 S를 부여할 수 없습니다.<br>
+        <b>· 표준분포</b> — 고정 비율(예: 20/60/20) 없이 <b>인원수 기준 가중평균이 B(100%)로 수렴</b>하는지만 검증합니다. 팀은 서로 묶지 않고 <b>팀별로 개별 검증</b>합니다.<br>
+        <b>· 평가대상(ver2) = 임원·팀장·관리직</b> — 생산직·도급직은 전용 평가방식 확정 전까지 이번 라운드에서 자동 제외됩니다.<br>
+        <b>· 생산팀 평가라인</b> — 당분간 팀장이 소속 인원을 전담 평가합니다. 서브팀장 자리는 명단에 공석으로 준비돼 있으며, 이름이 배정되면 자동으로 평가라인에 반영됩니다.<br>
+        <b>· 신사업팀 등 예외팀</b> — forceExempt로 지정된 팀은 강제분포·예산중립 검증을 적용하지 않고 등급을 자유롭게 부여합니다.<br>
+        <b>· 휴직·중도 입퇴사자</b> — 해당 평가기간 내 재직 이력이 없으면 이번 라운드는 건너뛰고 다음 평가기간으로 이월합니다.
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-eyebrow">연동 구조</div>
+      <div class="note">
+        <b>흐름:</b> Microsoft 계정으로 로그인(Azure AD/MSAL) → Microsoft Graph API로 SharePoint 사이트
+        <code>ymfoodcorp.sharepoint.com/sites/ymfoodeval</code>의 <b>명단·어필시트·평가기록·설정</b> 4개 리스트를 직접 읽고 씁니다.
+        제출은 즉시 SharePoint 리스트에 행이 생성·수정되며(별도 Power Automate 불필요), 평가자에게는 브라우저 mailto 링크로 알림 초안이 열립니다.
+        데이터는 이 화면에서 CSV/JSON으로 내보낼 수 있습니다.<br><br>
+        <b>권한 판정:</b> 로그인한 계정의 이메일을 '명단' 리스트의 <code>계정</code> 열과 대조해 자동으로 결정됩니다 —
+        <code>평가대상</code>=예 → 어필시트 탭, <code>1차/2차/3차평가자</code>에 본인 이름이 있으면 → 평가자입력 탭,
+        <code>그룹</code>=대표 또는 '설정' 리스트의 <code>관리자</code> 값에 본인 이메일 포함 → 집계·예산/설정 탭.<br><br>
+        <b>딥링크:</b> 어필 제출 시 <code>?role=eval&evaluator=…&target=…&period=…</code> 링크가 생성돼, 평가자 계정으로 로그인해서 클릭하면 해당 피평가자 화면이 바로 열립니다.<br><br>
+        <b>전제 조건:</b> Azure AD 앱 등록에서 API 권한 <code>Sites.ReadWrite.All</code>에 대한 관리자 동의가 필요하며, 앱의 SPA 리디렉션 URI가 실제 배포 URL과 일치해야 합니다.
+      </div>
+    </div>
+  </section>
+
+        </main>
+      </div>
+
+    </div>
+    <div class="foot">영미산업 경영관리팀 · 성과평가 (Azure AD + SharePoint) · 파라미터는 인건비 예산 확정 시 갱신</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= Azure AD (MSAL) + Microsoft Graph 연동 ================= */
+const MSAL_CONFIG={
+  auth:{
+    clientId:'d3c74473-e387-4b90-88c7-fc057a6202f4',
+    authority:'https://login.microsoftonline.com/180eeda6-9ee4-4b19-99ea-1c4c501384cc',
+    redirectUri:window.location.origin+window.location.pathname
+  },
+  cache:{cacheLocation:'sessionStorage',storeAuthStateInCookie:false}
+};
+const msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);
+const msalReady=msalInstance.initialize();
+const GRAPH_SCOPES=['User.Read','Sites.ReadWrite.All'];
+const GRAPH_LOGIN_REQUEST={scopes:GRAPH_SCOPES};
+const SITE_HOST='ymfoodcorp.sharepoint.com';
+const SITE_PATH='/sites/ymfoodeval';
+let GS={token:null,siteId:null,lists:{}};
+let SETTINGS={};
+
+async function acquireToken(account){
+  try{
+    const r=await msalInstance.acquireTokenSilent({scopes:GRAPH_SCOPES,account});
+    return r.accessToken;
+  }catch(e){
+    const r=await msalInstance.acquireTokenPopup(GRAPH_LOGIN_REQUEST);
+    return r.accessToken;
+  }
+}
+async function graphGet(token,url){
+  const r=await fetch(url,{headers:{Authorization:'Bearer '+token}});
+  if(!r.ok)throw new Error('Graph 요청 실패 ('+r.status+') '+url);
+  return r.json();
+}
+async function graphCall(token,url,method,body){
+  const r=await fetch(url,{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){const t=await r.text().catch(()=>'');throw new Error('Graph '+method+' 실패 ('+r.status+') '+t.slice(0,200));}
+  return r.json().catch(()=>({}));
+}
+async function createItem(token,siteId,listId,fields){
+  return graphCall(token,`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items`,'POST',{fields});
+}
+async function updateItem(token,siteId,listId,itemId,fields){
+  return graphCall(token,`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items/${itemId}/fields`,'PATCH',fields);
+}
+async function resolveSite(token){
+  const d=await graphGet(token,`https://graph.microsoft.com/v1.0/sites/${SITE_HOST}:${SITE_PATH}`);
+  return d.id;
+}
+async function resolveLists(token,siteId){
+  const d=await graphGet(token,`https://graph.microsoft.com/v1.0/sites/${siteId}/lists`);
+  const map={};d.value.forEach(l=>map[l.displayName]=l.id);return map;
+}
+async function fetchAllItems(token,siteId,listId){
+  let url=`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items?$expand=fields&$top=200`;
+  let items=[];
+  while(url){const d=await graphGet(token,url);items=items.concat(d.value);url=d['@odata.nextLink']||null;}
+  return items;
+}
+async function loadAllFromSharePoint(token){
+  const siteId=await resolveSite(token);
+  const lists=await resolveLists(token,siteId);
+  ['명단','어필시트','평가기록','설정'].forEach(n=>{if(!lists[n])throw new Error(`SharePoint 리스트 '${n}'을(를) 찾을 수 없습니다`);});
+  GS={token,siteId,lists};
+
+  const rosterItems=await fetchAllItems(token,siteId,lists['명단']);
+  ROSTER=rosterItems.map(it=>{const f=it.fields||{};return{
+    spId:it.id,name:f.Title||'',email:(f.계정||'').toLowerCase(),
+    team:f.소속팀||'',rank:f.직급||'',group:f.그룹||'',
+    e1:f['1차평가자']||'',e2:f['2차평가자']||'',e3:f['3차평가자']||'',
+    teamLead:f.팀장여부==='예',forceExempt:f.분포예외==='예',evalTarget:f.평가대상==='예',
+    note:f.비고||'',demo:false
+  };}).filter(r=>r.name);
+
+  const appealItems=await fetchAllItems(token,siteId,lists['어필시트']);
+  APPEALS=appealItems.map(it=>{const f=it.fields||{};return{
+    spId:it.id,period:f.Title||'',targetEmail:(f.대상자||'').toLowerCase(),empName:f.대상자성명||'',
+    empTeam:f.소속팀||'',empRank:f.직급||'',core:f.핵심성과||'',collab:f.협업기여||'',
+    challenge:f.도전개선||'',goal:f.차기목표||'',status:f.상태||'',submittedAt:f.제출일시||''
+  };}).filter(a=>a.targetEmail&&a.targetEmail!=='example@ymfood.com');
+
+  const evalItems=await fetchAllItems(token,siteId,lists['평가기록']);
+  EVALS=evalItems.map(it=>{const f=it.fields||{};return{
+    spId:it.id,period:f.Title||'',targetEmail:(f.대상자||'').toLowerCase(),empName:f.대상자성명||'',
+    empTeam:f.소속팀||'',evaluatorEmail:(f.평가자||'').toLowerCase(),evaluatorName:f.평가자성명||'',
+    evalStage:f.평가단계||'',grade:f.등급||'',factor:Number(f.계수)||1,
+    comment:f.코멘트||'',status:f.상태||'',submittedAt:f.제출일시||''
+  };}).filter(x=>x.targetEmail&&x.targetEmail!=='example@ymfood.com');
+
+  const settingItems=await fetchAllItems(token,siteId,lists['설정']);
+  SETTINGS={};settingItems.forEach(it=>{const f=it.fields||{};if(f.Title)SETTINGS[f.Title]=f.값||'';});
+  if(SETTINGS['현재평가기간'])document.getElementById('period').value=SETTINGS['현재평가기간'];
+  CFG=Object.assign({},CFG_DEFAULT);
+
+  rebuildLog();
+}
+
+/* ---------- storage shim: localStorage 우선, 실패 시 메모리 ---------- */
+const store=(()=>{let mem={};let ok=false;try{localStorage.setItem('__t','1');localStorage.removeItem('__t');ok=true;}catch(e){}
+  return{get:k=>{try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null);}catch(e){return k in mem?mem[k]:null;}},
+    set:(k,v)=>{try{ok?localStorage.setItem(k,v):(mem[k]=v);}catch(e){mem[k]=v;}}};})();
+
+/* ---------- 정책 상수 ---------- */
+const FACTOR={S:1.20,A:1.10,B:1.00,C:0.90};
+const S_CAP_RATIO=0.05;   // 전사 인원의 5% 이하
+const TEAM_MAX_GRADE='A'; // 팀 성과(팀장 평가) 최고 배율 캡
+const S_MODE='separate';  // S 별도재원: 팀 예산 가중평균에서 제외 (고정)
+
+/* group: 대표/임원/관리직/생산직 — 평가대상 범위(ver2=임원·관리직만) 판정에 사용
+   rank : 실제 직급/보직 표시용 텍스트
+   teamLead:true — 이 사람의 개인등급이 해당 팀의 '팀 성과(팀장 평가)'로도 쓰임 → S 불가·최고 A 캡 적용
+   placeholder:true — 아직 이름이 배정되지 않은 자리. 명단에는 안 보이고, 이름을 채우면 자동 활성화
+   forceExempt:true — 이 사람이 속한 팀은 강제분포·예산중립 검증에서 제외(1인 팀 등)
+   2026-07-24 조직도 기준 실명 반영. 담당 그룹 내 개별 서브리더는 미지정 — 팀장이 소속 관리직 전원을 직접 평가(추후 위임 예정) */
+const DEFAULT_ROSTER=[]; // 실제 명단은 SharePoint '명단' 리스트에서 Graph API로 로드합니다 (배포용 배포판에서는 실명 하드코딩 제거됨)
+
+/* ---------- Azure AD 로그인 → 명단 기준 권한 판정 ----------
+   더 이상 역할 데모 계정을 쓰지 않습니다. 로그인한 Microsoft 365 계정의 이메일을
+   '명단' 리스트의 계정 컬럼과 대조해 본인/평가자/대표/관리자 여부를 자동으로 판정합니다. */
+function allowedTabs(){
+  if(!currentUser)return[];
+  const t=[];
+  if(currentUser.isTarget)t.push('appeal');
+  if(currentUser.isEvaluator||currentUser.isCEO)t.push('eval');
+  if(currentUser.isCEO||currentUser.isAdmin)t.push('agg');
+  if(currentUser.isAdmin)t.push('set');
+  return t;
+}
+function roleLabelText(){
+  if(!currentUser)return'';
+  const labels=[];
+  if(currentUser.isAdmin)labels.push('관리자');
+  if(currentUser.isCEO)labels.push('대표이사');
+  if(currentUser.isEvaluator)labels.push('평가자');
+  if(currentUser.isTarget)labels.push('피평가자');
+  return labels.join(' · ')||'열람';
+}
+
+/* ---------- state (SharePoint 연동: 명단·어필시트·평가기록·설정) ---------- */
+const CFG_DEFAULT={paurl:"",mailtag:"[영미산업 성과평가]"};
+let ROSTER=[];         // Microsoft Graph로 '명단' 리스트에서 로드
+let APPEALS=[];        // '어필시트' 리스트 캐시
+let EVALS=[];          // '평가기록' 리스트 캐시
+let CFG=Object.assign({},CFG_DEFAULT);
+let LOG=[];            // APPEALS+EVALS를 화면용으로 합친 캐시 (rebuildLog()로 생성)
+let myEmail='';let varName='';let currentUser=null;
+function load(k,def){try{const v=store.get(k);return v?JSON.parse(v):def;}catch(e){return def;}}
+function save(k,v){store.set(k,JSON.stringify(v));}
+function period(){return document.getElementById('period').value;}
+function prevPeriod(p){return p==="2026-H2"?"2026-H1":null;}
+function emp(name){return ROSTER.find(r=>r.name===name);}
+function stageChain(r){const p=period();return p==="2026-H1"?[['e1','1차']]:[['e1','1차'],['e2','2차'],['e3','3차']];}
+/* 평가대상 범위: SharePoint '명단' 리스트의 평가대상 컬럼(예/아니요)이 기준입니다. */
+function evalScope(r){return !!r && !!r.evalTarget;}
+function evaluees(){return ROSTER.filter(evalScope);}                 // 화면 목록용
+function scoredEvaluees(){return ROSTER.filter(r=>evalScope(r)&&!r.demo);} // 집계·상한 계산용
+function isTeamPerf(r){return !!(r&&r.teamLead);}              // teamLead:true → 그 개인등급이 팀 성과로도 쓰임(겸직 임원 포함)
+function forceExemptTeam(team){return ROSTER.some(r=>r.team===team&&r.forceExempt);} // 강제분포·예산중립 검증 예외팀
+
+/* ---------- toast ---------- */
+let tT;function toast(msg,type){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type?' '+type:'');clearTimeout(tT);tT=setTimeout(()=>el.className='toast',2600);}
+
+/* ---------- tabs ---------- */
+document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.classList.contains('hidden'))return;
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['appeal','eval','agg','set'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
+  if(b.dataset.tab==='agg')renderAgg();
+});
+document.getElementById('period').addEventListener('change',()=>{fillNames();renderAppealIdentity();fillEvaluators();resetEvalBody();});
+
+/* ================= 어필시트 ================= */
+function fillNames(){const sel=document.getElementById('ap_name');const cur=sel.value;
+  sel.innerHTML='<option value="">— 이름 선택 —</option>'+evaluees().map(r=>`<option>${r.name}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+}
+/* 현재 어필시트의 대상자 이름 — 계정에 name이 매핑돼 있으면 그 값, 아니면 드롭다운 선택값 */
+let fixedName='';
+function apName(){return fixedName||document.getElementById('ap_name').value;}
+function renderAppealIdentity(){
+  const name=apName();const r=emp(name);const map=document.getElementById('ap_map');
+  document.getElementById('ap_teamrank').value=r?`${r.team} · ${r.rank}`:(name?'명단에 등록되지 않은 이름입니다':'');
+  if(!name){map.innerHTML='<span class="chip ghost">이름을 선택하세요</span>';return;}
+  if(!r){map.innerHTML='<span class="chip ghost">명단 미등록 — 평가라인 없음</span>';return;}
+  const chain=stageChain(r).map(([k,label])=>{const v=r[k];
+    return v?`<span class="chip"><small>${label}</small>${v}</span>`:`<span class="chip ghost"><small>${label}</small>—</span>`;}).join('');
+  map.innerHTML=chain||'<span class="chip ghost">평가자 없음</span>';
+  loadAppealDraft(name);
+}
+/* 로그인한 계정의 name을 어필시트에 고정 적용 (없으면 드롭다운으로 폴백) */
+function setAppealIdentity(acc){
+  fixedName=(acc&&acc.name||'').trim();
+  const fx=document.getElementById('ap_name_fixed');
+  const sel=document.getElementById('ap_name');
+  const hint=document.getElementById('ap_name_hint');
+  if(fixedName){
+    fx.value=fixedName;fx.classList.remove('hidden');
+    sel.classList.add('hidden');hint.classList.add('hidden');
+  }else{
+    fx.value='';fx.classList.add('hidden');
+    sel.classList.remove('hidden');sel.value='';hint.classList.remove('hidden');
+  }
+  renderAppealIdentity();
+}
+document.getElementById('ap_name').addEventListener('change',renderAppealIdentity);
+function coreVal(){const el=document.getElementById('ap_core');return el?el.value.trim():'';}
+function g(id){return document.getElementById(id).value.trim();}
+
+/* 통일 payload(평면 JSON) — 어필/평가 공통 스키마 */
+function basePayload(kind,r){
+  return{period:period(),kind,empName:r.name,empTeam:r.team,empRank:r.rank,
+    core:'',collab:'',challenge:'',goal:'',
+    evaluator:'',evalStage:'',grade:'',factor:'',comment:'',submittedAt:new Date().toISOString()};
+}
+function appealPayload(){const r=emp(apName());if(!r)return null;
+  const p=basePayload('appeal',r);
+  p.core=coreVal();
+  p.collab=g('ap_collab');p.challenge=g('ap_challenge');p.goal=g('ap_goal');
+  p.evaluator=r.e1||'';p.evalStage='-';
+  return p;
+}
+function loadAppealDraft(name){
+  const a=APPEALS.find(x=>x.period===period()&&x.targetEmail===myEmail);
+  document.getElementById('ap_collab').value=a?.collab||'';
+  document.getElementById('ap_challenge').value=a?.challenge||'';
+  document.getElementById('ap_goal').value=a?.goal||'';
+  const el=document.getElementById('ap_core');if(el)el.value=a?.core||'';
+}
+async function saveAppealDraft(){const name=apName();if(!name)return toast('로그인 정보를 확인하세요','warn');
+  const p=appealPayload();if(!p)return toast('명단에 등록되지 않은 이름입니다','warn');
+  try{await upsertAppeal(p,'임시저장');toast('임시저장했습니다');}
+  catch(e){toast('임시저장 실패: '+e.message,'bad');}
+}
+document.getElementById('ap_save').addEventListener('click',saveAppealDraft);
+document.getElementById('ap_submit').addEventListener('click',async()=>{
+  const p=appealPayload();if(!p)return toast('명단에 등록되지 않은 계정입니다','warn');
+  if(!p.core)return toast('핵심 성과를 입력하세요','warn');
+  try{
+    await upsertAppeal(p,'제출완료');
+    const to=p.evaluator;const subj=`${CFG.mailtag} ${p.empName}님 어필시트 제출 (${p.period})`;
+    const link=deepLink({role:'eval',evaluator:to,target:p.empName,period:p.period});
+    const body=`${p.empName}(${p.empTeam}·${p.empRank})님이 어필시트를 제출했습니다.\n\n핵심성과: ${p.core}\n\n`+
+      `협업: ${p.collab}\n도전: ${p.challenge}\n차기목표: ${p.goal}\n\n▶ 평가 입력(클릭 시 바로 평가 화면): ${link}`;
+    mailFallback(to,subj,body);
+    toast('제출 완료 · 1차 평가자에게 전달되었습니다');
+  }catch(e){toast('제출 실패: '+e.message,'bad');}
+});
+
+/* ================= 평가자 ================= */
+function fillEvaluators(){const sel=document.getElementById('ev_evaluator');const cur=sel.value;
+  const evs=[...new Set(evaluees().flatMap(r=>stageChain(r).map(([k])=>r[k]).filter(Boolean)))];
+  sel.innerHTML='<option value="">— 평가자 선택 —</option>'+evs.map(n=>`<option>${n}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+}
+function targetsOf(evaluator){const out=[];evaluees().forEach(r=>{stageChain(r).forEach(([k,label])=>{if(r[k]===evaluator)out.push({r,stage:label});});});return out;}
+document.getElementById('ev_evaluator').addEventListener('change',e=>{
+  const t=document.getElementById('ev_target');const list=targetsOf(e.target.value);
+  t.innerHTML='<option value="">— 피평가자 선택 —</option>'+list.map(o=>`<option value="${o.r.name}">${o.r.name} · ${o.r.team} (${o.stage})</option>`).join('');
+  resetEvalBody();
+});
+/* S 옵션 활성/비활성: 대표 전용 + 팀 성과(팀장 대상) A캡 */
+function applyGradeRules(){
+  const evaluator=document.getElementById('ev_evaluator').value;
+  const target=document.getElementById('ev_target').value;
+  const isCEO=emp(evaluator)?.group==='대표';
+  const teamPerf=isTeamPerf(emp(target));
+  const sAllowed=isCEO&&!teamPerf;
+  const sInput=document.getElementById('g_s');
+  sInput.disabled=!sAllowed;
+  const lock=document.getElementById('s_lock');
+  lock.style.display=sAllowed?'none':'block';
+  lock.textContent=teamPerf?'팀 성과는 A 상한':'대표이사 전용';
+  const cap=document.getElementById('cap_note');
+  if(teamPerf){cap.className='capnote show';cap.textContent=`이 대상은 '팀장 평가 = 팀 성과'입니다. 팀 성과의 최고 배율은 A(110%)로 캡이 적용되어 S를 부여할 수 없습니다.`;}
+  else{cap.className='capnote';cap.textContent='';}
+  if(!sAllowed&&sInput.checked){document.querySelector('input[name=grade][value="B"]').checked=true;renderGauge();}
+}
+document.getElementById('ev_target').addEventListener('change',e=>{
+  const name=e.target.value;const body=document.getElementById('ev_body');
+  if(!name){body.classList.add('hidden');return;}
+  body.classList.remove('hidden');
+  const r=emp(name);document.getElementById('ev_teamname').textContent='· '+r.team;
+  // 어필 표시
+  const ap=LOG.filter(x=>x.kind==='appeal'&&x.empName===name&&x.period===period()).slice(-1)[0];
+  const box=document.getElementById('ev_appeal');
+  if(ap){box.innerHTML=kv('핵심성과',ap.core)
+    +kv('협업·조직기여',ap.collab)+kv('도전·개선',ap.challenge)+kv('차기목표',ap.goal);}
+  else box.innerHTML='<span class="hint">해당 피평가자의 어필 제출 내역이 없습니다. (구두 확인 후 평가 가능)</span>';
+  // 상반기 참조
+  const prev=prevPeriod(period());const pv=document.getElementById('ev_prev');pv.innerHTML='';
+  if(prev){const pe=LOG.filter(x=>x.kind==='eval'&&x.empName===name&&x.period===prev);
+    if(pe.length){pv.innerHTML=`<div class="prevbox"><div class="h">상반기 평가 기록 (참고)</div>`+
+      pe.map(x=>`<div class="kv"><b>${x.evaluator} · ${x.evalStage} · <span class="gd ${x.grade}">${x.grade}</span></b><span>${esc(x.comment||'')}</span></div>`).join('')+`</div>`;}}
+  // 기존 평가 불러오기
+  const mine=LOG.filter(x=>x.kind==='eval'&&x.empName===name&&x.period===period()&&x.evaluator===document.getElementById('ev_evaluator').value).slice(-1)[0];
+  document.querySelectorAll('input[name=grade]').forEach(i=>i.checked=(i.value===(mine?.grade||'B')));
+  document.getElementById('ev_comment').value=mine?.comment||'';
+  applyGradeRules();
+  renderGauge();
+});
+function kv(t,v){return v?`<div class="kv"><b>${t}</b><span>${esc(v)}</span></div>`:'';}
+function esc(s){return(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function resetEvalBody(){document.getElementById('ev_target').value='';document.getElementById('ev_body').classList.add('hidden');}
+document.querySelectorAll('input[name=grade]').forEach(i=>i.addEventListener('change',renderGauge));
+
+function renderGauge(){
+  const target=document.getElementById('ev_target').value;
+  const r=emp(target);if(!r)return;const team=r.team;
+  const exempt=forceExemptTeam(team);
+  // 현재 화면 등급 반영한 팀 등급 집계 (관리직·임원 평가대상만)
+  const grades={};ROSTER.filter(x=>evalScope(x)&&x.team===team).forEach(x=>{
+    const rec=LOG.filter(l=>l.kind==='eval'&&l.empName===x.name&&l.period===period()).slice(-1)[0];
+    if(rec)grades[x.name]=rec.grade;});
+  const cur=[...document.querySelectorAll('input[name=grade]')].find(i=>i.checked)?.value||'B';
+  grades[target]=cur;
+  // 별도재원: S 제외하고 가중평균 계산
+  let vals=Object.values(grades).filter(gr=>gr!=='S');
+  const n=vals.length;const avg=n?vals.reduce((a,gr)=>a+FACTOR[gr],0)/n:1.0;
+  const lo=0.85,hi=1.20;const pct=Math.max(0,Math.min(1,(avg-lo)/(hi-lo)))*100;
+  const basePct=((1.00-lo)/(hi-lo))*100;
+  const gauge=document.getElementById('ev_gauge');const marker=document.getElementById('ev_marker');
+  gauge.querySelector('.baseline').style.left=basePct+'%';
+  marker.style.left=pct+'%';marker.textContent=avg.toFixed(2);
+  const over=!exempt&&avg>1.0009;gauge.classList.toggle('over',over);
+  // 분포 pill (고정 목표비율 없음 — 인원수 기준 집계)
+  const cnt={S:0,A:0,B:0,C:0};Object.values(grades).forEach(gr=>cnt[gr]++);
+  const total=Object.values(grades).length;
+  document.getElementById('ev_dist').innerHTML=
+    pill('S',cnt.S,'별도재원')+pill('A',cnt.A,'')+pill('B',cnt.B,'')+pill('C',cnt.C,'')
+    +`<div class="dpill tgt"><b>${total}</b><span>평가 인원</span></div>`;
+  const v=document.getElementById('ev_verdict');
+  if(exempt){v.className='verdict ok';v.innerHTML=`ℹ 이 팀(${team})은 강제분포·예산중립 검증 예외 팀입니다 — 등급을 자유롭게 부여할 수 있습니다. (참고 가중평균 ${avg.toFixed(3)})`;}
+  else if(over){v.className='verdict over';v.innerHTML=`⚠ 팀 가중평균 ${avg.toFixed(3)} — 예산(100%) 초과. A↓ 또는 C↑로 재조정이 필요합니다. (S는 계산 제외)`;}
+  else{v.className='verdict ok';v.innerHTML=`✓ 팀 가중평균 ${avg.toFixed(3)} — 예산 범위 내(≤100%, B에 수렴). S는 별도재원으로 제외됨.`;}
+}
+function pill(g,c,note){return`<div class="dpill"><b>${c}</b><span><span class="gd ${g}" style="font-size:10px">${g}</span> ${note||''}</span></div>`;}
+
+function evalPayload(){const evaluator=document.getElementById('ev_evaluator').value;const target=document.getElementById('ev_target').value;
+  const r=emp(target);const grade=[...document.querySelectorAll('input[name=grade]')].find(i=>i.checked)?.value||'B';
+  const stage=stageChain(r).find(([k])=>r[k]===evaluator)?.[1]||'1차';
+  const p=basePayload('eval',r);
+  p.evaluator=evaluator;p.evalStage=stage;p.grade=grade;p.factor=FACTOR[grade];p.comment=g('ev_comment');
+  return p;
+}
+document.getElementById('ev_save').addEventListener('click',async()=>{const p=evalPayload();if(!p.empName)return toast('피평가자를 선택하세요','warn');
+  if(!guardGrade(p))return;
+  try{await upsertEval(p,'작성중');toast('저장했습니다');renderGauge();}
+  catch(e){toast('저장 실패: '+e.message,'bad');}
+});
+document.getElementById('ev_submit').addEventListener('click',async()=>{
+  const p=evalPayload();if(!p.empName)return toast('피평가자를 선택하세요','warn');
+  if(!p.comment)return toast('피드백 코멘트를 입력하세요','warn');
+  if(!guardGrade(p))return;
+  try{
+    await upsertEval(p,'제출완료');
+    const subj=`${CFG.mailtag} ${p.empName}님 ${p.period} 평가 피드백`;
+    const body=`${p.evaluator}(${p.evalStage}) 평가가 등록되었습니다.\n\n[등급] ${p.grade} (${Math.round(p.factor*100)}%)\n[피드백]\n${p.comment}`;
+    mailFallback(p.empName,subj,body);
+    toast('평가 제출 완료 · 본인에게 피드백이 통지됩니다');
+  }catch(e){toast('제출 실패: '+e.message,'bad');}
+});
+
+/* S 부여 가드: (1)팀 성과 A캡 (2)대표 전용 (3)전사 5% 상한 */
+function guardGrade(p){
+  if(p.grade!=='S')return true;
+  if(isTeamPerf(emp(p.empName))){toast('팀 성과(팀장 평가)의 최고 등급은 A입니다. S를 부여할 수 없습니다','bad');return false;}
+  if(emp(p.evaluator)?.group!=='대표'){toast('S등급은 대표이사만 부여할 수 있습니다','bad');return false;}
+  const total=scoredEvaluees().length;
+  const maxS=Math.max(0,Math.floor(total*S_CAP_RATIO));
+  const existingS=LOG.filter(l=>l.kind==='eval'&&l.period===p.period&&l.grade==='S'&&l.empName!==p.empName).length;
+  if(existingS+1>maxS){
+    return confirm(`⚠ S등급은 전사 인원의 5% 이하로 제한됩니다.\n(전사 피평가 ${total}명 기준 권장 상한 ${maxS}명)\n\n현재 부여 예정 포함 ${existingS+1}명째입니다. 대표이사 재량으로 진행하시겠습니까?`);
+  }
+  return true;
+}
+
+/* ================= 제출 공통 (Microsoft Graph → SharePoint 리스트) ================= */
+async function upsertAppeal(p,status){
+  const fields={Title:p.period,대상자:myEmail,대상자성명:p.empName,소속팀:p.empTeam,직급:p.empRank,
+    핵심성과:p.core,협업기여:p.collab,도전개선:p.challenge,차기목표:p.goal,상태:status,
+    제출일시:new Date().toISOString()};
+  const existing=APPEALS.find(a=>a.period===p.period&&a.targetEmail===myEmail);
+  if(existing){await updateItem(GS.token,GS.siteId,GS.lists['어필시트'],existing.spId,fields);
+    Object.assign(existing,{empName:p.empName,empTeam:p.empTeam,empRank:p.empRank,core:p.core,collab:p.collab,challenge:p.challenge,goal:p.goal,status,submittedAt:fields.제출일시});}
+  else{const r=await createItem(GS.token,GS.siteId,GS.lists['어필시트'],fields);
+    APPEALS.push({spId:r.id,period:p.period,targetEmail:myEmail,empName:p.empName,empTeam:p.empTeam,empRank:p.empRank,core:p.core,collab:p.collab,challenge:p.challenge,goal:p.goal,status,submittedAt:fields.제출일시});}
+  rebuildLog();renderAgg();
+}
+async function upsertEval(p,status){
+  const r=emp(p.empName);const targetEmail=(r&&r.email)||'';
+  const fields={Title:p.period,대상자:targetEmail,대상자성명:p.empName,소속팀:p.empTeam,
+    평가자:myEmail,평가자성명:varName,평가단계:p.evalStage,등급:p.grade,계수:p.factor,
+    코멘트:p.comment,상태:status,제출일시:new Date().toISOString()};
+  const existing=EVALS.find(x=>x.period===p.period&&x.targetEmail===targetEmail&&x.evaluatorEmail===myEmail);
+  if(existing){await updateItem(GS.token,GS.siteId,GS.lists['평가기록'],existing.spId,fields);
+    Object.assign(existing,{empName:p.empName,empTeam:p.empTeam,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,status,submittedAt:fields.제출일시});}
+  else{const res=await createItem(GS.token,GS.siteId,GS.lists['평가기록'],fields);
+    EVALS.push({spId:res.id,period:p.period,targetEmail,empName:p.empName,empTeam:p.empTeam,evaluatorEmail:myEmail,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,status,submittedAt:fields.제출일시});}
+  rebuildLog();
+}
+function rebuildLog(){
+  LOG=[
+    ...APPEALS.map(a=>({period:a.period,kind:'appeal',empName:a.empName,empTeam:a.empTeam,empRank:a.empRank,
+      core:a.core,collab:a.collab,challenge:a.challenge,goal:a.goal,
+      evaluator:'',evalStage:'-',grade:'',factor:'',comment:'',submittedAt:a.submittedAt})),
+    ...EVALS.map(x=>({period:x.period,kind:'eval',empName:x.empName,empTeam:x.empTeam,empRank:'',
+      core:'',collab:'',challenge:'',goal:'',
+      evaluator:x.evaluatorName,evalStage:x.evalStage,grade:x.grade,factor:x.factor,comment:x.comment,submittedAt:x.submittedAt}))
+  ];
+}
+function mailFallback(toName,subj,body){
+  const r=emp(toName);const addr=(r&&r.email)?r.email:'';
+  const href=`mailto:${addr}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent((addr?'':'수신: '+toName+'\n\n')+body)}`;
+  if(!CFG.paurl){const a=document.createElement('a');a.href=href;a.click();}
+}
+function deepLink(o){const base=location.origin+location.pathname;
+  const q=new URLSearchParams();Object.entries(o).forEach(([k,v])=>{if(v)q.set(k,v);});return base+'?'+q.toString();}
+
+/* ================= 집계 (관리자 role에서만 렌더링) ================= */
+function renderAgg(){
+  if(!allowedTabs().includes('agg'))return;
+  const body=document.getElementById('agg_body');const rows=LOG.slice().reverse();
+  body.innerHTML=rows.length?rows.map(x=>`<tr>
+    <td>${x.period}</td><td>${x.kind==='appeal'?'어필':'평가'}</td><td>${x.empName}</td><td>${x.empTeam}</td>
+    <td>${x.kind==='eval'?x.evaluator+' / '+x.evalStage:'—'}</td>
+    <td>${x.grade?`<span class="gd ${x.grade}">${x.grade}</span>`:'—'}</td>
+    <td style="max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.kind==='appeal'?(x.core||''):(x.comment||''))}</td>
+    <td>${(x.submittedAt||'').slice(0,16).replace('T',' ')}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">아직 제출된 기록이 없습니다.</td></tr>';
+  // 팀별 예산 게이지 (관리직·임원 평가대상만, 팀별 개별 운영 — 팀 간 합산 없음)
+  const teams=[...new Set(ROSTER.filter(evalScope).map(r=>r.team))];
+  const g2=document.getElementById('agg_gauges');g2.innerHTML='';
+  teams.forEach(team=>{
+    const exempt=forceExemptTeam(team);
+    const members=ROSTER.filter(r=>evalScope(r)&&r.team===team);
+    const graded=members.map(m=>LOG.filter(l=>l.kind==='eval'&&l.empName===m.name&&l.period===period()).slice(-1)[0]?.grade).filter(Boolean);
+    if(!graded.length)return;
+    let vals=graded.filter(x=>x!=='S'); // 별도재원: S 제외
+    const avg=vals.length?vals.reduce((a,x)=>a+FACTOR[x],0)/vals.length:1;
+    const over=!exempt&&avg>1.0009;
+    g2.insertAdjacentHTML('beforeend',
+      `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--glass-edge)">
+        <div style="width:110px;font-size:12.5px;font-weight:700;color:var(--brand2)">${team}${exempt?' <span class="hint" style="font-weight:600">· 예외</span>':''}</div>
+        <div style="flex:1;height:10px;background:var(--track);border-radius:6px;position:relative">
+          <div style="position:absolute;left:${Math.max(0,Math.min(100,(avg-0.85)/0.35*100))}%;top:-3px;width:16px;height:16px;border-radius:50%;transform:translateX(-50%);background:${exempt?'var(--brand1)':(over?'var(--bad)':'var(--ok)')}"></div>
+          <div style="position:absolute;left:${(1-0.85)/0.35*100}%;top:-4px;bottom:-4px;width:2px;background:var(--brand2)"></div>
+        </div>
+        <div style="width:64px;text-align:right;font-weight:800;font-size:13px;color:${exempt?'var(--brand1)':(over?'var(--bad)':'var(--ok)')}">${avg.toFixed(3)}</div>
+        <div style="width:70px;font-size:11px;color:var(--muted)">${graded.length}명 평가</div>
+      </div>`);
+  });
+  if(!g2.innerHTML)g2.innerHTML='<div class="empty">평가가 입력되면 팀별 예산 게이지가 표시됩니다.</div>';
+}
+/* ================= 로그인 / 로그아웃 (Azure AD / MSAL) =================
+   Microsoft 365 계정으로 로그인하며, 실제 데이터 접근 통제는 SharePoint 리스트 권한(서버 측)이 담당합니다.
+   화면상의 탭 표시/숨김은 UX 편의를 위한 것으로, 최종 접근 제어는 SharePoint 권한 설정으로 이중 보장하는 것을 권장합니다. */
+function applyAccessTabs(){
+  const allowed=allowedTabs();
+  let firstVisible=null;
+  document.querySelectorAll('#tabs button').forEach(b=>{
+    const ok=allowed.includes(b.dataset.tab);
+    b.classList.toggle('hidden',!ok);
+    if(ok&&!firstVisible)firstVisible=b;
+  });
+  if(firstVisible)firstVisible.click();
+}
+async function doLogin(){
+  const err=document.getElementById('login_err');err.style.display='none';
+  try{
+    await msalReady;
+    const res=await msalInstance.loginPopup(GRAPH_LOGIN_REQUEST);
+    msalInstance.setActiveAccount(res.account);
+    await postLogin(res.account);
+  }catch(e){
+    const popupBlocked=e&&(e.errorCode==='popup_window_error'||e.errorCode==='empty_window_error'||e.errorCode==='user_cancelled');
+    if(popupBlocked){
+      // 브라우저 팝업 차단 시 리디렉션 방식으로 자동 전환 (페이지가 이동했다가 로그인 후 되돌아옵니다)
+      try{await msalInstance.loginRedirect(GRAPH_LOGIN_REQUEST);return;}catch(e2){/* 아래 공통 에러 표시로 폴백 */}
+    }
+    err.style.color='var(--bad)';
+    err.textContent='로그인에 실패했습니다: '+(e&&e.message?e.message:e)+(popupBlocked?' (팝업이 차단되어 리디렉션 방식으로 재시도했습니다. 브라우저 팝업 차단을 해제하면 더 빠르게 로그인할 수 있습니다.)':'');
+    err.style.display='block';
+  }
+}
+async function postLogin(account){
+  const err=document.getElementById('login_err');
+  err.style.color='var(--brand2)';err.style.display='block';err.textContent='SharePoint 데이터를 불러오는 중...';
+  try{
+    const token=await acquireToken(account);
+    await loadAllFromSharePoint(token);
+    myEmail=(account.username||'').toLowerCase();
+    const varMe=ROSTER.find(r=>r.email===myEmail);
+    varName=varMe?varMe.name:(account.name||myEmail);
+    const myEvaluees=ROSTER.filter(r=>r.e1===varName||r.e2===varName||r.e3===varName);
+    const adminSetting=(SETTINGS['관리자']||'').toLowerCase();
+    currentUser={
+      email:myEmail,name:varName,me:varMe,
+      isTarget:!!varMe&&!!varMe.evalTarget,
+      isCEO:!!varMe&&varMe.group==='대표',
+      isEvaluator:myEvaluees.length>0,
+      isAdmin:adminSetting.includes(myEmail)
+    };
+    if(!varMe)toast('명단에 등록되지 않은 계정입니다. 관리자에게 문의하세요','warn');
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    applyAccessTabs();
+    fixedName=varName;
+    document.getElementById('ap_name_fixed').value=varName;
+    document.getElementById('ap_name_fixed').classList.remove('hidden');
+    document.getElementById('ap_name').classList.add('hidden');
+    document.getElementById('ap_name_hint').classList.add('hidden');
+    fillNames();fillEvaluators();fillSettings();
+    renderAppealIdentity();
+    document.getElementById('whoami').textContent=`${varName||myEmail} · ${roleLabelText()}`;
+    toast(`${roleLabelText()}(으)로 로그인했습니다`);
+    applyDeepLink();
+  }catch(e){
+    err.style.color='var(--bad)';
+    err.textContent='데이터 로드 실패: '+(e&&e.message?e.message:e)+' — Azure AD API 권한(Sites.ReadWrite.All) 관리자 동의를 확인하세요.';
+  }
+}
+async function doLogout(){
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('login_err').style.display='none';
+  currentUser=null;myEmail='';varName='';ROSTER=[];APPEALS=[];EVALS=[];LOG=[];
+  try{await msalReady;await msalInstance.logoutPopup();}catch(e){}
+  toast('로그아웃했습니다','warn');
+}
+document.getElementById('login_btn').addEventListener('click',doLogin);
+document.getElementById('logoutBtn').addEventListener('click',doLogout);
+
+document.getElementById('ex_csv').addEventListener('click',()=>{
+  const cols=['period','kind','empName','empTeam','empRank','core','collab','challenge','goal','evaluator','evalStage','grade','factor','comment','submittedAt'];
+  const esc2=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const csv=[cols.join(',')].concat(LOG.map(r=>cols.map(c=>esc2(r[c])).join(','))).join('\r\n');
+  dl(new Blob(['﻿'+csv],{type:'text/csv'}),`성과평가_${period()}.csv`);toast('CSV를 내려받았습니다');
+});
+document.getElementById('ex_json').addEventListener('click',()=>{dl(new Blob([JSON.stringify(LOG,null,2)],{type:'application/json'}),`성과평가_${period()}.json`);toast('JSON을 내려받았습니다');});
+document.getElementById('ex_clear').addEventListener('click',async()=>{if(!GS.token)return toast('로그인 후 이용하세요','warn');try{await loadAllFromSharePoint(GS.token);renderAgg();toast('SharePoint 데이터를 다시 불러왔습니다');}catch(e){toast('새로고침 실패: '+e.message,'bad');}});
+function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
+
+/* ================= 설정 ================= */
+function fillSettings(){document.getElementById('set_paurl').value=CFG.paurl;document.getElementById('set_mailtag').value=CFG.mailtag;
+  document.getElementById('set_roster').value=JSON.stringify(ROSTER,null,2);}
+document.getElementById('set_reset').addEventListener('click',async()=>{if(confirm('SharePoint 명단을 다시 불러옵니다.')){try{await loadAllFromSharePoint(GS.token);fillSettings();fillNames();fillEvaluators();toast('SharePoint에서 다시 불러왔습니다');}catch(e){toast('다시 불러오기 실패: '+e.message,'bad');}}});
+
+/* ================= URL deep-link (로그인 후 role에 맞을 때만 적용) ================= */
+function applyDeepLink(){const q=new URLSearchParams(location.search);const role=q.get('role');
+  if(q.get('period'))document.getElementById('period').value=q.get('period');
+  if(role==='eval'&&allowedTabs().includes('eval')){
+    document.querySelector('#tabs button[data-tab=eval]').click();
+    fillEvaluators();const ev=q.get('evaluator');if(ev){const s=document.getElementById('ev_evaluator');if([...s.options].some(o=>o.value===ev)){s.value=ev;s.dispatchEvent(new Event('change'));
+      const tg=q.get('target');if(tg){const t=document.getElementById('ev_target');if([...t.options].some(o=>o.value===tg)){t.value=tg;t.dispatchEvent(new Event('change'));}}}}
+  }
+}
+
+/* ================= 다크모드 ================= */
+function applyTheme(dark){
+  document.body.classList.toggle('dark',dark);
+  const ico=document.getElementById('themeIco'),txt=document.getElementById('themeTxt');
+  if(ico)ico.textContent=dark?'☀':'☾';
+  if(txt)txt.textContent=dark?'라이트모드':'다크모드';
+  const meta=document.getElementById('themeColor');
+  if(meta)meta.setAttribute('content',dark?'#0d111a':'#c2410c');
+  window.dispatchEvent(new CustomEvent('ymp-theme',{detail:{dark:dark}}));
+}
+let darkMode=load('ymp_theme','light');   // 기본값: 라이트 모드
+applyTheme(darkMode==='dark');
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  darkMode=document.body.classList.contains('dark')?'light':'dark';
+  applyTheme(darkMode==='dark');save('ymp_theme',darkMode);
+});
+
+
+/* ==================================================================
+   수면 물결(ripple) 배경 — 감쇠 파동 시뮬레이션 + 굴절 렌더링
+   · 저해상도 버퍼에서 계산 후 CSS로 확대(성능)
+   · 마우스/터치를 따라 파문이 생기고, 일정 간격으로 빗방울이 떨어짐
+   ================================================================== */
+(function(){
+  const cv=document.getElementById('rippleBg');
+  if(!cv||!cv.getContext)return;
+  const ctx=cv.getContext('2d');
+  if(!ctx)return;
+  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let W=0,H=0,prev=null,curr=null,src=null,out=null,raf=0,alive=true;
+
+  /* ---- 굴절될 원본(수면) — 물속 깊이감을 주는 옅은 그라데이션 ---- */
+  function buildSource(){
+    if(!W||!H)return;
+    const off=document.createElement('canvas');off.width=W;off.height=H;
+    const c=off.getContext('2d');
+    const dark=document.body.classList.contains('dark');
+    /* 위쪽은 수면에 가까워 밝고, 아래로 갈수록 깊어져 진해짐 */
+    const g=c.createLinearGradient(0,0,0,H);
+    if(dark){g.addColorStop(0,'#5a3009');g.addColorStop(.48,'#3d2008');g.addColorStop(1,'#2a1505');}
+    else{g.addColorStop(0,'#ff9a33');g.addColorStop(.46,'#ff7d10');g.addColorStop(1,'#ef6704');}
+    c.fillStyle=g;c.fillRect(0,0,W,H);
+    /* 수면을 투과한 빛 — 아주 옅게 */
+    const rg=c.createRadialGradient(W*.28,H*.10,0,W*.28,H*.10,Math.max(W,H)*.72);
+    rg.addColorStop(0,dark?'rgba(255,180,90,.13)':'rgba(255,214,150,.30)');
+    rg.addColorStop(1,'rgba(255,255,255,0)');
+    c.fillStyle=rg;c.fillRect(0,0,W,H);
+    src=c.getImageData(0,0,W,H).data;
+  }
+
+  function resize(){
+    const dw=Math.max(window.innerWidth,320),dh=Math.max(window.innerHeight,320);
+    W=Math.max(140,Math.min(360,Math.round(dw/4.4)));
+    H=Math.max(120,Math.round(W*dh/dw));
+    cv.width=W;cv.height=H;
+    prev=new Int16Array(W*H);curr=new Int16Array(W*H);
+    out=ctx.createImageData(W,H);
+    buildSource();
+    if(reduce)renderStill();
+  }
+
+  /* ---- 물방울: 가장자리가 0으로 부드럽게 수렴하는 종모양 ---- */
+  function drop(cx,cy,r,strength){
+    cx=Math.round(cx);cy=Math.round(cy);
+    const r2=r*r, inv=1/r2, yl=Math.ceil(r);
+    for(let y=-yl;y<=yl;y++){
+      const py=cy+y; if(py<1||py>=H-1)continue;
+      const y2=y*y;
+      for(let x=-yl;x<=yl;x++){
+        const px=cx+x; if(px<1||px>=W-1)continue;
+        const d2=x*x+y2; if(d2>r2)continue;
+        const f=1-d2*inv;                 // 1(중심) → 0(가장자리), 경계 불연속 없음
+        prev[py*W+px]+=Math.round(strength*f*f*f);
+      }
+    }
+  }
+  /* ---- 예약 파동 (클릭 시 함몰→반동→너울 3단) ---- */
+  const pend=[];
+  function schedule(now,delay,cx,cy,r,s){pend.push({at:now+delay,cx:cx,cy:cy,r:r,s:s});}
+  function flush(now){
+    for(let i=pend.length-1;i>=0;i--){
+      if(now>=pend[i].at){const q=pend[i];drop(q.cx,q.cy,q.r,q.s);pend.splice(i,1);}
+    }
+  }
+
+  /* ---- 파동 한 스텝 ---- */
+  function step(){
+    let i=W+1;
+    for(let y=1;y<H-1;y++){
+      for(let x=1;x<W-1;x++,i++){
+        let v=((prev[i-1]+prev[i+1]+prev[i-W]+prev[i+W])>>1)-curr[i];
+        v-=v>>6;                 // 감쇠(약하게 → 여운이 길어 묵직함)
+        curr[i]=v;
+      }
+      i+=2;
+    }
+    const t=prev;prev=curr;curr=t;
+  }
+
+  /* ---- 굴절 + 하이라이트 렌더링 ---- */
+  function render(){
+    const o=out.data,s=src;
+    let i=W+1;
+    for(let y=1;y<H-1;y++){
+      for(let x=1;x<W-1;x++,i++){
+        const xo=prev[i-1]-prev[i+1];
+        const yo=prev[i-W]-prev[i+W];
+        let sx=x+(xo>>2), sy=y+(yo>>2);
+        if(sx<0)sx=0;else if(sx>=W)sx=W-1;
+        if(sy<0)sy=0;else if(sy>=H)sy=H-1;
+        const sp=(sy*W+sx)<<2, dp=i<<2;
+        const sh=(xo+yo)>>2;      // 표면 기울기 → 빛 반사
+        let gl=sh>0?sh:0; gl=(gl*gl)>>7;   // 능선에서 반짝이는 비선형 광택
+        if(gl>90)gl=90;
+        let r=s[sp]+sh+gl, g=s[sp+1]+sh+gl*0.86, b=s[sp+2]+sh+gl*0.62;
+        o[dp]  = r<0?0:r>255?255:r;
+        o[dp+1]= g<0?0:g>255?255:g;
+        o[dp+2]= b<0?0:b>255?255:b;
+        o[dp+3]=255;
+      }
+      i+=2;
+    }
+    /* 테두리 1px은 원본 그대로 */
+    for(let x=0;x<W;x++){copyPx(x,0);copyPx(x,H-1);}
+    for(let y=0;y<H;y++){copyPx(0,y);copyPx(W-1,y);}
+    ctx.putImageData(out,0,0);
+  }
+  function copyPx(x,y){
+    const p=(y*W+x)<<2,o=out.data;
+    o[p]=src[p];o[p+1]=src[p+1];o[p+2]=src[p+2];o[p+3]=255;
+  }
+  function renderStill(){
+    const o=out.data;
+    for(let p=0;p<o.length;p+=4){o[p]=src[p];o[p+1]=src[p+1];o[p+2]=src[p+2];o[p+3]=255;}
+    ctx.putImageData(out,0,0);
+  }
+
+  /* ---- 빗방울 자동 생성 ---- */
+  let nextDrop=0;
+  function ambient(now){
+    if(now<nextDrop)return;
+    nextDrop=now+3000+Math.random()*7000;    // 3~10초에 한 번
+    drop(2+Math.random()*(W-4),2+Math.random()*(H-4),
+         3+Math.random()*3, 110+Math.random()*110);
+  }
+  /* 넓고 아주 약한 너울 — 수면이 늘 미세하게 일렁여 매트해 보이지 않게 */
+  let nextSwell=0;
+  function swell(now){
+    if(now<nextSwell)return;
+    nextSwell=now+1800+Math.random()*2200;
+    drop(4+Math.random()*(W-8),4+Math.random()*(H-8),
+         22+Math.random()*14, 11+Math.random()*14);
+  }
+
+  /* ---- 루프 ---- */
+  let last=0;
+  function loop(now){
+    if(!alive)return;
+    raf=requestAnimationFrame(loop);
+    if(now-last<33)return;      // ~30fps
+    last=now;
+    ambient(now);
+    swell(now);
+    flush(now);
+    step();
+    render();
+  }
+
+  /* ---- 포인터 상호작용 ---- */
+  function toBuf(e){
+    return [e.clientX/window.innerWidth*W, e.clientY/window.innerHeight*H];
+  }
+  /* 커서를 배로 보고, 뒤로 V자 항적(wake)을 남긴다 */
+  let mx=null,my=null,mt=0;
+  window.addEventListener('pointermove',e=>{
+    if(reduce)return;
+    const now=performance.now();
+    const [x,y]=toBuf(e);
+    if(mx===null){mx=x;my=y;mt=now;return;}
+    const dt=now-mt;
+    if(dt<67)return;                       // 초당 최대 15회로 제한
+    const dx=x-mx, dy=y-my, dist=Math.hypot(dx,dy);
+    if(dist<6){return;}                    // 6px 이상 실제로 움직였을 때만
+    mt=now;
+    const spd=Math.min(1,(dist/dt)/0.32);  // 0~1 정규화 속도
+    const nx=dx/dist, ny=dy/dist;          // 진행 방향
+    const ox=-ny, oy=nx;                   // 좌우(수직) 방향
+    /* 뱃머리 — 선체가 물을 눌러 가르며 지나간다(음의 변위) */
+    drop(x,y,5,-(90+150*spd));
+    /* 좌우로 벌어지는 V자 물마루 — 깊고 또렷하게 */
+    for(let k=1;k<=4;k++){
+      const back=k*3.2, spread=k*2.2, st=(78+155*spd)/(k*1.12);
+      drop(x-nx*back+ox*spread, y-ny*back+oy*spread, 3.8, st);
+      drop(x-nx*back-ox*spread, y-ny*back-oy*spread, 3.8, st);
+    }
+    /* 배가 지나간 자리에 남는 고랑 */
+    drop(x-nx*6.5, y-ny*6.5, 4.5, -(55+105*spd));
+    mx=x;my=y;
+  },{passive:true});
+  window.addEventListener('pointerdown',e=>{
+    if(reduce)return;
+    const [x,y]=toBuf(e);
+    const now=performance.now();
+    drop(x,y,9,-210);                    // ① 낙하 충격 — 수면이 먼저 패임
+    schedule(now,100, x,y, 6.5, 165);    // ② 반동으로 솟구침
+    schedule(now,240, x,y,16,    70);    // ③ 넓게 퍼지는 너울
+  },{passive:true});
+
+  /* ---- 라이프사이클 ---- */
+  let rt;
+  window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(resize,180);});
+  window.addEventListener('ymp-theme',()=>{buildSource();if(reduce)renderStill();});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){alive=false;cancelAnimationFrame(raf);}
+    else if(!reduce){alive=true;last=0;raf=requestAnimationFrame(loop);}
+  });
+
+  resize();
+  if(!reduce){
+    drop(W*.5,H*.42,10,300);
+    raf=requestAnimationFrame(loop);
+  }
+})();
+
+/* ================= init ================= */
+(async function initAuth(){
+  try{
+    await msalReady;
+    const resp=await msalInstance.handleRedirectPromise();
+    let account=(resp&&resp.account)||msalInstance.getActiveAccount();
+    if(!account){
+      const all=msalInstance.getAllAccounts();
+      if(all.length){account=all[0];msalInstance.setActiveAccount(account);}
+    }
+    if(account)await postLogin(account);
+  }catch(e){console.error('MSAL 초기화 실패',e);}
+})();
+</script>
+</body>
+</html>
