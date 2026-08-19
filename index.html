@@ -234,7 +234,7 @@
   select.tx{padding:12px 34px 12px 14px}
   input.tx[readonly]{background-color:var(--soft);color:var(--muted);cursor:default;
     border-style:dashed;border-color:var(--glass-edge)}
-  input.tx#ap_name_fixed{color:var(--ink);font-weight:800;font-size:15px;border-style:solid;
+  input.tx#ap_name_fixed,input.tx#ev_evaluator{color:var(--ink);font-weight:800;font-size:15px;border-style:solid;
     background:linear-gradient(160deg,var(--glass-tint),rgba(255,255,255,0))}
   textarea.tx{resize:vertical;min-height:64px;line-height:1.55}
   textarea.core{min-height:104px}
@@ -621,7 +621,7 @@
       <div class="grid">
         <div class="field">
           <label class="lb">평가자 (본인)<span class="req">*</span></label>
-          <select class="tx" id="ev_evaluator"><option value="">— 평가자 선택 —</option></select>
+          <input class="tx" id="ev_evaluator" readonly />
         </div>
         <div class="field">
           <label class="lb">피평가자<span class="req">*</span></label>
@@ -956,7 +956,7 @@ document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.cl
   ['appeal','eval','agg','set'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
   if(b.dataset.tab==='agg')renderAgg();
 });
-document.getElementById('period').addEventListener('change',()=>{fillNames();renderAppealIdentity();fillEvaluators();resetEvalBody();});
+document.getElementById('period').addEventListener('change',()=>{fillNames();renderAppealIdentity();setEvaluatorIdentity();});
 
 /* ================= 어필시트 ================= */
 function fillNames(){const sel=document.getElementById('ap_name');const cur=sel.value;
@@ -1031,17 +1031,17 @@ document.getElementById('ap_submit').addEventListener('click',async()=>{
 });
 
 /* ================= 평가자 ================= */
-function fillEvaluators(){const sel=document.getElementById('ev_evaluator');const cur=sel.value;
-  const evs=[...new Set(evaluees().flatMap(r=>stageChain(r).map(([k])=>r[k]).filter(Boolean)))];
-  sel.innerHTML='<option value="">— 평가자 선택 —</option>'+evs.map(n=>`<option>${n}</option>`).join('');
-  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
-}
 function targetsOf(evaluator){const out=[];evaluees().forEach(r=>{stageChain(r).forEach(([k,label])=>{if(r[k]===evaluator)out.push({r,stage:label});});});return out;}
-document.getElementById('ev_evaluator').addEventListener('change',e=>{
-  const t=document.getElementById('ev_target');const list=targetsOf(e.target.value);
+/* 평가자는 드롭다운으로 아무나 고를 수 없게, 로그인한 본인 이름으로 고정.
+   isEvaluator(=본인이 누군가의 e1/e2/e3에 매핑돼 있음)일 때만 값이 채워지고, 그 본인 기준 피평가자 목록만 노출됨. */
+function setEvaluatorIdentity(){
+  const sel=document.getElementById('ev_evaluator');
+  const name=(currentUser&&currentUser.isEvaluator)?varName:'';
+  sel.value=name;
+  const t=document.getElementById('ev_target');const list=targetsOf(name);
   t.innerHTML='<option value="">— 피평가자 선택 —</option>'+list.map(o=>`<option value="${o.r.name}">${o.r.name} · ${o.r.team} (${o.stage})</option>`).join('');
   resetEvalBody();
-});
+}
 /* S 옵션 활성/비활성: 대표 전용 + 팀 성과(팀장 대상) A캡 */
 /* 상반기(2026-H1)는 등급 없이 피드백만 작성 — 등급 부여는 하반기부터 */
 function isGradedPeriod(){return period()!=='2026-H1';}
@@ -1308,7 +1308,7 @@ async function postLogin(account){
     document.getElementById('ap_name_fixed').classList.remove('hidden');
     document.getElementById('ap_name').classList.add('hidden');
     document.getElementById('ap_name_hint').classList.add('hidden');
-    fillNames();fillEvaluators();fillSettings();
+    fillNames();setEvaluatorIdentity();fillSettings();
     renderAppealIdentity();
     document.getElementById('whoami').textContent=`${varName||myEmail} · ${roleLabelText()}`;
     toast(`${roleLabelText()}(으)로 로그인했습니다`);
@@ -1342,15 +1342,15 @@ function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.create
 /* ================= 설정 ================= */
 function fillSettings(){document.getElementById('set_paurl').value=CFG.paurl;document.getElementById('set_mailtag').value=CFG.mailtag;
   document.getElementById('set_roster').value=JSON.stringify(ROSTER,null,2);}
-document.getElementById('set_reset').addEventListener('click',async()=>{if(confirm('SharePoint 명단을 다시 불러옵니다.')){try{await loadAllFromSharePoint(GS.token);fillSettings();fillNames();fillEvaluators();toast('SharePoint에서 다시 불러왔습니다');}catch(e){toast('다시 불러오기 실패: '+e.message,'bad');}}});
+document.getElementById('set_reset').addEventListener('click',async()=>{if(confirm('SharePoint 명단을 다시 불러옵니다.')){try{await loadAllFromSharePoint(GS.token);fillSettings();fillNames();setEvaluatorIdentity();toast('SharePoint에서 다시 불러왔습니다');}catch(e){toast('다시 불러오기 실패: '+e.message,'bad');}}});
 
 /* ================= URL deep-link (로그인 후 role에 맞을 때만 적용) ================= */
 function applyDeepLink(){const q=new URLSearchParams(location.search);const role=q.get('role');
   if(q.get('period'))document.getElementById('period').value=q.get('period');
   if(role==='eval'&&allowedTabs().includes('eval')){
     document.querySelector('#tabs button[data-tab=eval]').click();
-    fillEvaluators();const ev=q.get('evaluator');if(ev){const s=document.getElementById('ev_evaluator');if([...s.options].some(o=>o.value===ev)){s.value=ev;s.dispatchEvent(new Event('change'));
-      const tg=q.get('target');if(tg){const t=document.getElementById('ev_target');if([...t.options].some(o=>o.value===tg)){t.value=tg;t.dispatchEvent(new Event('change'));}}}}
+    /* 평가자는 로그인 계정으로 고정되므로(setEvaluatorIdentity) 딥링크로 바꿀 수 없음 — 피평가자만 지정 가능 */
+    const tg=q.get('target');if(tg){const t=document.getElementById('ev_target');if([...t.options].some(o=>o.value===tg)){t.value=tg;t.dispatchEvent(new Event('change'));}}
   }
 }
 
