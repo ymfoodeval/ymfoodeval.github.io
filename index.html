@@ -608,7 +608,7 @@
 
       <div class="actions" style="margin-top:16px">
         <button class="btn" id="ap_save">임시저장</button>
-        <button class="btn primary" id="ap_submit">제출하고 1차 평가자에게 보내기</button>
+        <button class="btn primary" id="ap_submit">제출</button>
       </div>
     </div>
   </section>
@@ -635,32 +635,37 @@
       <div class="ro" id="ev_appeal"><span class="hint">해당 피평가자의 어필 제출 내역이 없습니다.</span></div>
       <div id="ev_prev"></div>
 
-      <div style="height:18px"></div>
-      <div class="sec-eyebrow">등급 부여</div>
-      <div class="grades" id="ev_grades">
-        <label class="gopt s"><input type="radio" name="grade" value="S" id="g_s"><div class="box"><div class="g" style="color:var(--gold)">S</div><div class="f">120% · 특별</div></div><div class="lockmsg" id="s_lock">대표이사 전용</div></label>
-        <label class="gopt"><input type="radio" name="grade" value="A"><div class="box"><div class="g">A</div><div class="f">110% · 우수</div></div></label>
-        <label class="gopt"><input type="radio" name="grade" value="B" checked><div class="box"><div class="g">B</div><div class="f">100% · 표준</div></div></label>
-        <label class="gopt"><input type="radio" name="grade" value="C"><div class="box"><div class="g">C</div><div class="f">90% · 미흡</div></div></label>
+      <div id="ev_grade_section">
+        <div style="height:18px"></div>
+        <div class="sec-eyebrow">등급 부여</div>
+        <div class="grades" id="ev_grades">
+          <label class="gopt s"><input type="radio" name="grade" value="S" id="g_s"><div class="box"><div class="g" style="color:var(--gold)">S</div><div class="f">120% · 특별</div></div><div class="lockmsg" id="s_lock">대표이사 전용</div></label>
+          <label class="gopt"><input type="radio" name="grade" value="A"><div class="box"><div class="g">A</div><div class="f">110% · 우수</div></div></label>
+          <label class="gopt"><input type="radio" name="grade" value="B" checked><div class="box"><div class="g">B</div><div class="f">100% · 표준</div></div></label>
+          <label class="gopt"><input type="radio" name="grade" value="C"><div class="box"><div class="g">C</div><div class="f">90% · 미흡</div></div></label>
+        </div>
+        <div class="capnote" id="cap_note"></div>
       </div>
-      <div class="capnote" id="cap_note"></div>
+      <div class="hint" id="ev_grade_hidden_note" style="margin-top:6px">상반기는 등급 없이 피드백 코멘트만 작성합니다. 등급은 하반기부터 부여합니다.</div>
 
       <div class="field full" style="margin-top:16px">
         <label class="lb">피드백 코멘트<span class="req">*</span></label>
         <textarea class="tx" id="ev_comment" placeholder="등급 근거와 강점·개선점을 구체적으로. 하반기 평가 시 이 코멘트가 참고 자료로 표시됩니다."></textarea>
       </div>
 
-      <div style="height:18px"></div>
-      <div class="sec-eyebrow">팀 분포 · 예산 게이지 <span id="ev_teamname" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
-      <div class="gauge" id="ev_gauge">
-        <div class="track">
-          <div class="baseline" style="left:50%"></div>
-          <div class="marker" id="ev_marker" style="left:50%">1.00</div>
+      <div id="ev_gauge_section">
+        <div style="height:18px"></div>
+        <div class="sec-eyebrow">팀 분포 · 예산 게이지 <span id="ev_teamname" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
+        <div class="gauge" id="ev_gauge">
+          <div class="track">
+            <div class="baseline" style="left:50%"></div>
+            <div class="marker" id="ev_marker" style="left:50%">1.00</div>
+          </div>
+          <div class="cap"><span>0.85</span><span style="color:var(--warn);font-weight:700">← 예산초과 구간</span><span>1.20</span></div>
         </div>
-        <div class="cap"><span>0.85</span><span style="color:var(--warn);font-weight:700">← 예산초과 구간</span><span>1.20</span></div>
+        <div class="distrow" id="ev_dist"></div>
+        <div class="verdict ok" id="ev_verdict">입력 시 팀 가중평균이 계산됩니다.</div>
       </div>
-      <div class="distrow" id="ev_dist"></div>
-      <div class="verdict ok" id="ev_verdict">입력 시 팀 가중평균이 계산됩니다.</div>
 
       <div class="actions" style="margin-top:16px">
         <button class="btn" id="ev_save">저장</button>
@@ -768,10 +773,11 @@ const MSAL_CONFIG={
 };
 const msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);
 const msalReady=msalInstance.initialize();
-const GRAPH_SCOPES=['User.Read','Sites.ReadWrite.All'];
+const GRAPH_SCOPES=['User.Read','Sites.ReadWrite.All','Mail.Send'];
 const GRAPH_LOGIN_REQUEST={scopes:GRAPH_SCOPES};
 const SITE_HOST='ymfoodcorp.sharepoint.com';
 const SITE_PATH='/sites/ymfoodeval';
+const SITE_MAILBOX='ymfoodeval@ymfoodcorp.onmicrosoft.com'; // 평가 결과 메일의 고정 발신자(사이트 공용 메일함)
 let GS={token:null,siteId:null,lists:{}};
 let SETTINGS={};
 
@@ -793,6 +799,14 @@ async function graphCall(token,url,method,body){
   const r=await fetch(url,{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(!r.ok){const t=await r.text().catch(()=>'');throw new Error('Graph '+method+' 실패 ('+r.status+') '+t.slice(0,200));}
   return r.json().catch(()=>({}));
+}
+/* 평가 결과 메일: 로그인한 평가자의 위임 토큰(Mail.Send)으로, 발신자는 사이트 공용 메일함(SITE_MAILBOX)에 고정해 자동 발송.
+   평가자가 SITE_MAILBOX에 대한 "보낸 사람(SendAs)" 권한을 Exchange에서 부여받아야 정상 동작함(관리자 설정 필요). */
+async function sendMailAsSite(token,toAddr,subject,bodyText){
+  const url=`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(SITE_MAILBOX)}/sendMail`;
+  const r=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify({message:{subject,body:{contentType:'Text',content:bodyText},toRecipients:[{emailAddress:{address:toAddr}}]},saveToSentItems:false})});
+  if(!r.ok){const t=await r.text().catch(()=>'');throw new Error('메일 발송 실패 ('+r.status+') '+t.slice(0,200));}
 }
 async function createItem(token,siteId,listId,fields){
   return graphCall(token,`https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listId}/items`,'POST',{fields});
@@ -995,12 +1009,7 @@ document.getElementById('ap_submit').addEventListener('click',async()=>{
   if(!p.core)return toast('핵심 성과를 입력하세요','warn');
   try{
     await upsertAppeal(p,'제출완료');
-    const to=p.evaluator;const subj=`${CFG.mailtag} ${p.empName}님 어필시트 제출 (${p.period})`;
-    const link=deepLink({role:'eval',evaluator:to,target:p.empName,period:p.period});
-    const body=`${p.empName}(${p.empTeam}·${p.empRank})님이 어필시트를 제출했습니다.\n\n핵심성과: ${p.core}\n\n`+
-      `협업: ${p.collab}\n도전: ${p.challenge}\n차기목표: ${p.goal}\n\n▶ 평가 입력(클릭 시 바로 평가 화면): ${link}`;
-    mailFallback(to,subj,body);
-    toast('제출 완료 · 1차 평가자에게 전달되었습니다');
+    toast('제출 완료');
   }catch(e){toast('제출 실패: '+e.message,'bad');}
 });
 
@@ -1017,6 +1026,14 @@ document.getElementById('ev_evaluator').addEventListener('change',e=>{
   resetEvalBody();
 });
 /* S 옵션 활성/비활성: 대표 전용 + 팀 성과(팀장 대상) A캡 */
+/* 상반기(2026-H1)는 등급 없이 피드백만 작성 — 등급 부여는 하반기부터 */
+function isGradedPeriod(){return period()!=='2026-H1';}
+function applyEvalPeriodVisibility(){
+  const graded=isGradedPeriod();
+  document.getElementById('ev_grade_section').classList.toggle('hidden',!graded);
+  document.getElementById('ev_grade_hidden_note').classList.toggle('hidden',graded);
+  document.getElementById('ev_gauge_section').classList.toggle('hidden',!graded);
+}
 function applyGradeRules(){
   const evaluator=document.getElementById('ev_evaluator').value;
   const target=document.getElementById('ev_target').value;
@@ -1053,6 +1070,7 @@ document.getElementById('ev_target').addEventListener('change',e=>{
   const mine=LOG.filter(x=>x.kind==='eval'&&x.empName===name&&x.period===period()&&x.evaluator===document.getElementById('ev_evaluator').value).slice(-1)[0];
   document.querySelectorAll('input[name=grade]').forEach(i=>i.checked=(i.value===(mine?.grade||'B')));
   document.getElementById('ev_comment').value=mine?.comment||'';
+  applyEvalPeriodVisibility();
   applyGradeRules();
   renderGauge();
 });
@@ -1094,10 +1112,12 @@ function renderGauge(){
 function pill(g,c,note){return`<div class="dpill"><b>${c}</b><span><span class="gd ${g}" style="font-size:10px">${g}</span> ${note||''}</span></div>`;}
 
 function evalPayload(){const evaluator=document.getElementById('ev_evaluator').value;const target=document.getElementById('ev_target').value;
-  const r=emp(target);const grade=[...document.querySelectorAll('input[name=grade]')].find(i=>i.checked)?.value||'B';
+  const r=emp(target);
+  const graded=isGradedPeriod();
+  const grade=graded?([...document.querySelectorAll('input[name=grade]')].find(i=>i.checked)?.value||'B'):'';
   const stage=stageChain(r).find(([k])=>r[k]===evaluator)?.[1]||'1차';
   const p=basePayload('eval',r);
-  p.evaluator=evaluator;p.evalStage=stage;p.grade=grade;p.factor=FACTOR[grade];p.comment=g('ev_comment');
+  p.evaluator=evaluator;p.evalStage=stage;p.grade=grade;p.factor=grade?FACTOR[grade]:1;p.comment=g('ev_comment');
   return p;
 }
 document.getElementById('ev_save').addEventListener('click',async()=>{const p=evalPayload();if(!p.empName)return toast('피평가자를 선택하세요','warn');
@@ -1112,9 +1132,19 @@ document.getElementById('ev_submit').addEventListener('click',async()=>{
   try{
     await upsertEval(p,'제출완료');
     const subj=`${CFG.mailtag} ${p.empName}님 ${p.period} 평가 피드백`;
-    const body=`${p.evaluator}(${p.evalStage}) 평가가 등록되었습니다.\n\n[등급] ${p.grade} (${Math.round(p.factor*100)}%)\n[피드백]\n${p.comment}`;
-    mailFallback(p.empName,subj,body);
-    toast('평가 제출 완료 · 본인에게 피드백이 통지됩니다');
+    const gradeLine=p.grade?`[등급] ${p.grade} (${Math.round(p.factor*100)}%)\n`:'';
+    const body=`${p.evaluator}(${p.evalStage}) 평가가 등록되었습니다.\n\n${gradeLine}[피드백]\n${p.comment}`;
+    const r=emp(p.empName);const toAddr=(r&&r.email)||'';
+    if(toAddr){
+      try{
+        await sendMailAsSite(GS.token,toAddr,subj,body);
+        toast('평가 제출 완료 · 본인에게 피드백 메일이 발송되었습니다');
+      }catch(mailErr){
+        toast('평가는 저장됐지만 메일 발송에 실패했습니다: '+mailErr.message,'warn');
+      }
+    }else{
+      toast('평가 제출 완료 (수신자 이메일을 찾지 못해 메일은 발송되지 않았습니다)','warn');
+    }
   }catch(e){toast('제출 실패: '+e.message,'bad');}
 });
 
@@ -1169,14 +1199,6 @@ function rebuildLog(){
       evaluator:x.evaluatorName,evalStage:x.evalStage,grade:x.grade,factor:x.factor,comment:x.comment,submittedAt:x.submittedAt}))
   ];
 }
-function mailFallback(toName,subj,body){
-  const r=emp(toName);const addr=(r&&r.email)?r.email:'';
-  const href=`mailto:${addr}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent((addr?'':'수신: '+toName+'\n\n')+body)}`;
-  if(!CFG.paurl){const a=document.createElement('a');a.href=href;a.click();}
-}
-function deepLink(o){const base=location.origin+location.pathname;
-  const q=new URLSearchParams();Object.entries(o).forEach(([k,v])=>{if(v)q.set(k,v);});return base+'?'+q.toString();}
-
 /* ================= 집계 (관리자 role에서만 렌더링) ================= */
 function renderAgg(){
   if(!allowedTabs().includes('agg'))return;
