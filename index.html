@@ -782,6 +782,14 @@ const MAIL_LOGIN_REQUEST={scopes:MAIL_SCOPES};
 const SITE_HOST='ymfoodcorp.sharepoint.com';
 const SITE_PATH='/sites/ymfoodeval';
 const SITE_MAILBOX='ymfoodeval@ymfoodcorp.onmicrosoft.com'; // 평가 결과 메일의 고정 발신자(사이트 공용 메일함)
+/* 명단의 계정(field_1)은 Azure AD 로그인 매칭용으로 @ymfoodcorp.onmicrosoft.com 도메인을 씀(테넌트에 커스텀 도메인 미연결).
+   실제 회사 이메일은 로컬파트(@ 앞부분)는 동일하고 도메인만 @ymfood.com — 89명 전원 확인됨(평가명단_전체89명.xlsx ↔ _MS계정.xlsx 대조).
+   메일 "받는 사람"은 로그인 계정이 아니라 이 실제 회사 메일로 보내야 함. */
+function companyEmailOf(loginEmail){
+  if(!loginEmail)return'';
+  const at=loginEmail.indexOf('@');if(at<0)return loginEmail;
+  return loginEmail.slice(0,at)+'@ymfood.com';
+}
 let GS={token:null,siteId:null,lists:{}};
 let SETTINGS={};
 
@@ -1151,7 +1159,7 @@ document.getElementById('ev_submit').addEventListener('click',async()=>{
     const subj=`${CFG.mailtag} ${p.empName}님 ${p.period} 평가 피드백`;
     const gradeLine=p.grade?`[등급] ${p.grade} (${Math.round(p.factor*100)}%)\n`:'';
     const body=`${p.evaluator}(${p.evalStage}) 평가가 등록되었습니다.\n\n${gradeLine}[피드백]\n${p.comment}`;
-    const r=emp(p.empName);const toAddr=(r&&r.email)||'';
+    const r=emp(p.empName);const toAddr=companyEmailOf(r&&r.email);
     if(toAddr){
       try{
         await sendMailAsSite(toAddr,subj,body);
