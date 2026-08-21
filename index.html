@@ -781,7 +781,9 @@ const MAIL_SCOPES=['Mail.Send'];
 const MAIL_LOGIN_REQUEST={scopes:MAIL_SCOPES};
 const SITE_HOST='ymfoodcorp.sharepoint.com';
 const SITE_PATH='/sites/ymfoodeval';
-const SITE_MAILBOX='ymfoodeval@ymfoodcorp.onmicrosoft.com'; // 평가 결과 메일의 고정 발신자(사이트 공용 메일함)
+const SITE_MAILBOX='evalnoreply@ymfoodcorp.onmicrosoft.com'; // 평가 결과 메일의 고정 발신자(공유 메일함, 관리자가 생성+SendAs 부여 필요).
+  // 이전에 쓰던 ymfoodeval@ymfoodcorp.onmicrosoft.com은 SharePoint 사이트를 뒷받침하는 M365 "그룹" 메일함이라
+  // Graph의 /users/{mailbox}/sendMail이 지원 안 됨(ErrorGroupIsUsedInNonGroupURI) — 진짜 공유 메일함으로 교체함.
 /* 명단의 계정(field_1)은 Azure AD 로그인 매칭용으로 @ymfoodcorp.onmicrosoft.com 도메인을 씀(테넌트에 커스텀 도메인 미연결).
    실제 회사 이메일은 로컬파트(@ 앞부분)는 동일하고 도메인만 @ymfood.com — 89명 전원 확인됨(평가명단_전체89명.xlsx ↔ _MS계정.xlsx 대조).
    메일 "받는 사람"은 로그인 계정이 아니라 이 실제 회사 메일로 보내야 함. */
