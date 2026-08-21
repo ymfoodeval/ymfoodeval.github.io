@@ -951,6 +951,7 @@ function load(k,def){try{const v=store.get(k);return v?JSON.parse(v):def;}catch(
 function save(k,v){store.set(k,JSON.stringify(v));}
 function period(){return document.getElementById('period').value;}
 function prevPeriod(p){return p==="2026-H2"?"2026-H1":null;}
+function periodLabel(p){const m=/^(\d{4})-H([12])$/.exec(p||'');return m?`${m[1]} ${m[2]==='1'?'상반기':'하반기'}`:(p||'');}
 function emp(name){return ROSTER.find(r=>r.name===name);}
 function stageChain(r){const p=period();return p==="2026-H1"?[['e1','1차']]:[['e1','1차'],['e2','2차'],['e3','3차']];}
 /* 평가대상 범위: SharePoint '명단' 리스트의 평가대상 컬럼(예/아니요)이 기준입니다. */
@@ -1161,7 +1162,7 @@ document.getElementById('ev_submit').addEventListener('click',async()=>{
   if(!guardGrade(p))return;
   try{
     await upsertEval(p,'제출완료');
-    const subj=`${CFG.mailtag} ${p.empName}님 ${p.period} 평가 피드백`;
+    const subj=`${CFG.mailtag} ${p.empName}님 ${periodLabel(p.period)} 평가 피드백`;
     const gradeLine=p.grade?`[등급] ${p.grade} (${Math.round(p.factor*100)}%)\n`:'';
     const body=`${p.evaluator}님의 평가가 등록되었습니다.\n\n${gradeLine}[피드백]\n${p.comment}`;
     const r=emp(p.empName);const toAddr=companyEmailOf(r&&r.email);
