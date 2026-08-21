@@ -1163,7 +1163,7 @@ document.getElementById('ev_submit').addEventListener('click',async()=>{
     await upsertEval(p,'제출완료');
     const subj=`${CFG.mailtag} ${p.empName}님 ${p.period} 평가 피드백`;
     const gradeLine=p.grade?`[등급] ${p.grade} (${Math.round(p.factor*100)}%)\n`:'';
-    const body=`${p.evaluator}(${p.evalStage}) 평가가 등록되었습니다.\n\n${gradeLine}[피드백]\n${p.comment}`;
+    const body=`${p.evaluator}님의 평가가 등록되었습니다.\n\n${gradeLine}[피드백]\n${p.comment}`;
     const r=emp(p.empName);const toAddr=companyEmailOf(r&&r.email);
     if(toAddr){
       try{
