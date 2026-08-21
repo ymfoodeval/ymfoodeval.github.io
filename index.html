@@ -776,8 +776,11 @@ const msalReady=msalInstance.initialize();
 const GRAPH_SCOPES=['User.Read','Sites.ReadWrite.All'];
 const GRAPH_LOGIN_REQUEST={scopes:GRAPH_SCOPES};
 /* Mail.Send는 관리자 동의가 아직 안 끝난 별도 권한이라 로그인 필수 스코프에서 분리함.
-   같이 요청하면 동의 안 된 스코프 때문에 로그인 자체가 실패함(테넌트가 사용자 동의를 막아둠) — sendMailAsSite에서만 별도로 요청. */
-const MAIL_SCOPES=['Mail.Send'];
+   같이 요청하면 동의 안 된 스코프 때문에 로그인 자체가 실패함(테넌트가 사용자 동의를 막아둠) — sendMailAsSite에서만 별도로 요청.
+   2026-08-21: 공유 사서함(SITE_MAILBOX)으로 발송 시 403 ErrorAccessDenied 원인 확인 — /users/{id}/sendMail로
+   본인 소유가 아닌 사서함에 보내려면 Mail.Send만으로는 부족하고 Mail.Send.Shared 위임 권한이 별도로 필요함
+   (Send As 권한과 Mail.Send 관리자 동의가 둘 다 있어도 이 스코프가 없으면 Graph가 거부함). 스코프 추가함. */
+const MAIL_SCOPES=['Mail.Send','Mail.Send.Shared'];
 const MAIL_LOGIN_REQUEST={scopes:MAIL_SCOPES};
 const SITE_HOST='ymfoodcorp.sharepoint.com';
 const SITE_PATH='/sites/ymfoodeval';
