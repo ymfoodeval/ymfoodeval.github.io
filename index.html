@@ -484,6 +484,24 @@
   #loginScreen .header-card::before{content:none}
   .login-theme{position:fixed;top:20px;right:22px;z-index:3}
 
+  /* ---------- 입력기간 안내 배너 ---------- */
+  .dlbar{padding:11px 14px;border-radius:14px;font-size:12.5px;line-height:1.7;text-align:left;
+    background:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.65);color:var(--ink-2);font-weight:700}
+  body.dark .dlbar{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:#e7eef7}
+  .dlbar .row{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+  .dlbar .row+.row{margin-top:5px}
+  .dlbar .st{font-weight:800;padding:1px 8px;border-radius:999px;font-size:11px;flex:0 0 auto;
+    background:rgba(120,120,120,.14);color:var(--muted)}
+  .dlbar .st.open{background:rgba(22,163,74,.16);color:#15803d}
+  .dlbar .st.shut{background:rgba(220,38,38,.13);color:#b91c1c}
+  body.dark .dlbar .st.open{background:rgba(34,197,94,.2);color:#86efac}
+  body.dark .dlbar .st.shut{background:rgba(248,113,113,.2);color:#fca5a5}
+  .dlbar .adminwarn{margin-top:7px;padding-top:7px;border-top:1px dashed rgba(0,0,0,.18);
+    color:#b45309;font-weight:800;font-size:11.5px}
+  body.dark .dlbar .adminwarn{border-top-color:rgba(255,255,255,.2);color:#fbbf24}
+  #login_deadline{margin:0 0 18px}
+  #appDeadline{margin:16px 24px -6px}
+
   @media(max-width:900px){
     .app-body{flex-direction:column}
     .side{width:auto;flex:none;border-right:none;border-bottom:1px solid rgba(255,255,255,.45)}
@@ -509,7 +527,8 @@
     <div class="header-card" style="text-align:center">
       <img class="logo" style="height:72px;margin:0 auto 20px;padding:8px 20px" src="data:image/png;base64,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" alt="영미산업(주)" />
       <div style="font-size:21px;font-weight:800;color:var(--ink);margin-bottom:3px">영미산업 성과평가</div>
-      <div class="hint" style="margin-bottom:24px">영미산업 Microsoft 365 계정으로 로그인해 주세요</div>
+      <div class="hint" style="margin-bottom:20px">영미산업 Microsoft 365 계정으로 로그인해 주세요</div>
+      <div class="dlbar hidden" id="login_deadline"></div>
       <button class="btn primary" id="login_btn" style="width:100%">
         <svg width="18" height="18" viewBox="0 0 21 21" style="vertical-align:-3px;margin-right:8px"><rect width="9" height="9" x="1" y="1" fill="#f25022"/><rect width="9" height="9" x="11" y="1" fill="#7fba00"/><rect width="9" height="9" x="1" y="11" fill="#00a4ef"/><rect width="9" height="9" x="11" y="11" fill="#ffb900"/></svg>
         Microsoft 계정으로 로그인
@@ -541,6 +560,8 @@
           <button class="btn ghost" id="logoutBtn" style="padding:8px 16px">로그아웃</button>
         </div>
       </div>
+
+      <div class="dlbar hidden" id="appDeadline"></div>
 
       <div class="app-body">
         <aside class="side">
@@ -601,8 +622,8 @@
           <textarea class="tx" id="ap_challenge" placeholder="시도한 도전과 배운 점 / 아쉬웠던 점"></textarea>
         </div>
         <div class="field full">
-          <label class="lb">차기 반기 목표</label>
-          <textarea class="tx" id="ap_goal" placeholder="다음 반기에 집중할 과제"></textarea>
+          <label class="lb">향후 목표</label>
+          <textarea class="tx" id="ap_goal" placeholder="향후 집중할 과제"></textarea>
         </div>
       </div>
 
@@ -798,6 +819,165 @@ function companyEmailOf(loginEmail){
 let GS={token:null,siteId:null,lists:{}};
 let SETTINGS={};
 
+/* ==================================================================
+   입력기간(마감) 판정 — 설정 리스트의 시작/마감 값을 KST 기준으로 해석
+   ------------------------------------------------------------------
+   · 'YYYY-MM-DD' / 'YYYY-MM-DD HH:MM' / 'YYYY-MM-DD HH:MM:SS' 모두 허용
+   · 시작은 그 시각부터 포함, 마감은 그 시각 '직전까지' 허용(exclusive).
+     - '18:00:00' → 17:59:59.999까지 통과, 18:00:00.000부터 차단
+     - '11:59'(초 생략) → 그 분의 끝까지 = 12:00:00.000 직전까지 통과
+     - '2026-10-10'(날짜만) → 그날 23:59:59.999까지 통과
+     덕분에 마감 18:00:00 / 시작 18:00:00처럼 같은 시각을 써도
+     겹치거나 비는 구간 없이 정확히 맞물린다.
+   · 값이 없거나 형식이 깨지면 그 게이트는 걸지 않고(fail-open) 관리자에게만 경고.
+     오타 하나로 전원이 막히는 사고가 더 치명적이라 의도적으로 이렇게 둠.
+   · 시각 기준은 브라우저 시계가 아니라 Graph 응답의 Date 헤더(서버 시각).
+     헤더는 초 단위라 ±1초 오차가 있을 수 있음 — 분 단위 마감에는 충분.
+   ================================================================== */
+const KST_OFFSET_MS=9*60*60*1000;
+let SERVER_TIME_SKEW=null;          // 서버시각 - 브라우저시각 (ms)
+function noteServerDate(res){
+  try{
+    const h=res&&res.headers&&res.headers.get&&res.headers.get('Date');
+    if(!h)return;
+    const t=Date.parse(h);
+    if(!isNaN(t))SERVER_TIME_SKEW=t-Date.now();
+  }catch(e){}
+}
+function nowMs(){return Date.now()+(SERVER_TIME_SKEW||0);}
+
+/* 반환: {ms, endExclusive, endDisplay} | null(값 없음=제한 없음) | undefined(형식 오류)
+   · ms           — 적힌 그 시각 (시작 판정·표시에 사용)
+   · endExclusive — 마감 판정용 상한. 이 시각 '미만'까지 허용
+   · endDisplay   — 마감 표시용. 관리자가 적은 값 그대로 보이게 함
+     (초 생략 '11:59'은 11:59로, 날짜만 '2026-10-10'은 23:59로 표시) */
+function parseSettingParts(raw){
+  const s=String(raw==null?'':raw).trim();
+  if(!s)return null;
+  const m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?\s*$/);
+  if(!m)return undefined;
+  const y=+m[1],mo=+m[2],d=+m[3];
+  const hasTime=m[4]!==undefined,hasSec=m[6]!==undefined;
+  const hh=hasTime?+m[4]:0,mi=hasTime?+m[5]:0,ss=hasSec?+m[6]:0;
+  if(mo<1||mo>12||d<1||d>31||hh>23||mi>59||ss>59)return undefined;
+  const ms=Date.UTC(y,mo-1,d,hh,mi,ss,0)-KST_OFFSET_MS;     // KST 벽시계 → epoch
+  return{
+    ms,
+    endExclusive:hasSec?ms:(hasTime?ms+60000:ms+86400000),  // 초 명시=그 시각, 분=다음 분, 날짜만=다음 날
+    endDisplay  :hasSec?ms:(hasTime?ms:ms+86399999)
+  };
+}
+function fmtKST(ms){
+  if(ms==null||isNaN(ms))return'';
+  const d=new Date(ms+KST_OFFSET_MS),p=n=>String(n).padStart(2,'0');
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
+}
+const WINDOW_KEYS={
+  appeal:{start:'어필작성시작',end:'어필작성마감',label:'어필 작성'},
+  eval  :{start:'평가입력시작',end:'평가입력마감',label:'평가 입력'}
+};
+function windowOf(kind,src){
+  const S=src||SETTINGS;
+  const k=WINDOW_KEYS[kind];
+  const ps=parseSettingParts(S[k.start]),pe=parseSettingParts(S[k.end]);
+  const bad=(ps===undefined)||(pe===undefined);
+  const startMs=ps?ps.ms:null;
+  const endEx  =pe?pe.endExclusive:null;   // 판정용(미만)
+  const endMs  =pe?pe.endDisplay:null;     // 표시용
+  const t=nowMs();
+  let phase='open';
+  if(startMs!==null&&t<startMs)phase='before';
+  else if(endEx!==null&&t>=endEx)phase='after';
+  return{kind,label:k.label,open:phase==='open',phase,bad,startMs,endMs,endEx};
+}
+function windowMsg(w){
+  if(w.phase==='before')return`입력기간이 아닙니다. ${w.label} 시작: ${fmtKST(w.startMs)}`;
+  if(w.phase==='after') return`입력기간이 아닙니다. ${w.label}은 ${fmtKST(w.endMs)}에 마감되었습니다.`;
+  return'';
+}
+/* 관리자는 마감 이후에도 정정할 수 있게 통과시키되, 그 사실을 분명히 알린다.
+   (어차피 관리자는 SharePoint에서 직접 고칠 수 있어 앱에서만 막는 건 실익이 없음) */
+function guardWindow(kind){
+  const w=windowOf(kind);
+  if(w.open)return true;
+  if(currentUser&&currentUser.isAdmin){
+    toast('마감 이후이지만 관리자 권한으로 진행합니다','warn');
+    return true;
+  }
+  toast(windowMsg(w),'bad');
+  refreshWindowUI();
+  return false;
+}
+
+/* ---------- 입력기간 배너 / 버튼 상태 ---------- */
+function windowLine(w){
+  const st=w.open?'<span class="st open">진행중</span>'
+                 :`<span class="st shut">${w.phase==='before'?'시작 전':'마감'}</span>`;
+  let range;
+  if(w.startMs!==null&&w.endMs!==null)range=`${fmtKST(w.startMs)} ~ ${fmtKST(w.endMs)}`;
+  else if(w.endMs!==null)range=`${fmtKST(w.endMs)} 마감`;
+  else if(w.startMs!==null)range=`${fmtKST(w.startMs)} 시작`;
+  else range='기간 제한 없음';
+  let tail='';
+  if(w.open&&w.endMs!==null){
+    const left=w.endMs-nowMs(),days=Math.floor(left/86400000),hours=Math.floor(left/3600000);
+    tail=days>=1?` · D-${days}`:(hours>=1?` · ${hours}시간 남음`:' · 곧 마감');
+  }
+  return`<div class="row">${st}<span><b>${w.label}</b> ${range}${tail}</span></div>`;
+}
+function renderDeadlineBar(el,src){
+  if(!el)return;
+  const a=windowOf('appeal',src),e=windowOf('eval',src);
+  let html=windowLine(a)+windowLine(e);
+  if(currentUser&&currentUser.isAdmin){
+    const warns=[];
+    /* 대표검토마감은 게이트가 아니라 참고용 표시 (상반기는 대표 검토 절차 자체가 없음) */
+    const ceo=parseSettingParts((src||SETTINGS)['대표검토마감']);
+    if(ceo)
+      html+=`<div class="row"><span class="st">참고</span><span><b>대표 검토</b> ${fmtKST(ceo.endDisplay)} (차단 없음)</span></div>`;
+    if(a.bad||e.bad)warns.push('설정 리스트의 날짜 형식을 읽지 못했습니다 (YYYY-MM-DD 또는 YYYY-MM-DD HH:MM). 해당 항목은 제한 없이 열려 있습니다.');
+    const S=src||SETTINGS;
+    const py=(String(S['현재평가기간']||'').match(/^(\d{4})/)||[])[1];
+    const dy=(String(S['어필작성마감']||'').match(/^(\d{4})/)||[])[1];
+    if(py&&dy&&py!==dy)warns.push(`평가기간(${S['현재평가기간']})과 마감일 연도(${dy})가 다릅니다. 마감일 수정을 잊지 않으셨나요?`);
+    else if(a.phase==='after'&&e.phase==='after')warns.push('어필·평가 입력기간이 모두 종료된 상태입니다. 평가기간을 바꾸셨다면 마감일도 함께 수정하세요.');
+    if(warns.length)html+='<div class="adminwarn">⚠ '+warns.join('<br>⚠ ')+'</div>';
+  }
+  el.innerHTML=html;el.classList.remove('hidden');
+}
+/* 로그인 화면은 토큰이 없어 설정을 못 읽으므로, 직전 로그인 때 받아둔 값을 보여준다.
+   (ssoSilent로 조용히 토큰이 잡히면 그때 실제 값으로 다시 그림) */
+const DL_CACHE_KEY='ymp_dl_cache';
+function cacheDeadlines(){
+  try{
+    store.set(DL_CACHE_KEY,JSON.stringify({
+      '현재평가기간':SETTINGS['현재평가기간']||'',
+      '어필작성시작':SETTINGS['어필작성시작']||'','어필작성마감':SETTINGS['어필작성마감']||'',
+      '평가입력시작':SETTINGS['평가입력시작']||'','평가입력마감':SETTINGS['평가입력마감']||''}));
+  }catch(e){}
+}
+function renderLoginDeadline(){
+  const el=document.getElementById('login_deadline');if(!el)return;
+  let src=null;
+  if(SETTINGS&&(SETTINGS['어필작성마감']||SETTINGS['평가입력마감']))src=SETTINGS;
+  else{try{src=JSON.parse(store.get(DL_CACHE_KEY)||'null');}catch(e){src=null;}}
+  if(!src)return;
+  renderDeadlineBar(el,src);
+}
+function refreshWindowUI(){
+  renderDeadlineBar(document.getElementById('appDeadline'));
+  const a=windowOf('appeal'),e=windowOf('eval');
+  const admin=!!(currentUser&&currentUser.isAdmin);
+  [['ap_save',a],['ap_submit',a],['ev_save',e],['ev_submit',e]].forEach(pair=>{
+    const b=document.getElementById(pair[0]);if(!b)return;
+    const w=pair[1],block=!w.open&&!admin;
+    b.disabled=block;
+    b.title=block?windowMsg(w):'';
+    b.style.opacity=block?'.5':'';
+    b.style.cursor=block?'not-allowed':'';
+  });
+}
+
 async function acquireToken(account){
   try{
     const r=await msalInstance.acquireTokenSilent({scopes:GRAPH_SCOPES,account});
@@ -809,11 +989,13 @@ async function acquireToken(account){
 }
 async function graphGet(token,url){
   const r=await fetch(url,{headers:{Authorization:'Bearer '+token}});
+  noteServerDate(r);
   if(!r.ok)throw new Error('Graph 요청 실패 ('+r.status+') '+url);
   return r.json();
 }
 async function graphCall(token,url,method,body){
   const r=await fetch(url,{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  noteServerDate(r);
   if(!r.ok){const t=await r.text().catch(()=>'');throw new Error('Graph '+method+' 실패 ('+r.status+') '+t.slice(0,200));}
   return r.json().catch(()=>({}));
 }
@@ -1030,12 +1212,14 @@ function loadAppealDraft(name){
   const el=document.getElementById('ap_core');if(el)el.value=a?.core||'';
 }
 async function saveAppealDraft(){const name=apName();if(!name)return toast('로그인 정보를 확인하세요','warn');
+  if(!guardWindow('appeal'))return;
   const p=appealPayload();if(!p)return toast('명단에 등록되지 않은 이름입니다','warn');
   try{await upsertAppeal(p,'임시저장');toast('임시저장했습니다');}
   catch(e){toast('임시저장 실패: '+e.message,'bad');}
 }
 document.getElementById('ap_save').addEventListener('click',saveAppealDraft);
 document.getElementById('ap_submit').addEventListener('click',async()=>{
+  if(!guardWindow('appeal'))return;
   const p=appealPayload();if(!p)return toast('명단에 등록되지 않은 계정입니다','warn');
   if(!p.core)return toast('핵심 성과를 입력하세요','warn');
   try{
@@ -1151,12 +1335,14 @@ function evalPayload(){const evaluator=document.getElementById('ev_evaluator').v
   p.evaluator=evaluator;p.evalStage=stage;p.grade=grade;p.factor=grade?FACTOR[grade]:1;p.comment=g('ev_comment');
   return p;
 }
-document.getElementById('ev_save').addEventListener('click',async()=>{const p=evalPayload();if(!p.empName)return toast('피평가자를 선택하세요','warn');
+document.getElementById('ev_save').addEventListener('click',async()=>{if(!guardWindow('eval'))return;
+  const p=evalPayload();if(!p.empName)return toast('피평가자를 선택하세요','warn');
   if(!guardGrade(p))return;
   try{await upsertEval(p,'작성중');toast('저장했습니다');renderGauge();}
   catch(e){toast('저장 실패: '+e.message,'bad');}
 });
 document.getElementById('ev_submit').addEventListener('click',async()=>{
+  if(!guardWindow('eval'))return;
   const p=evalPayload();if(!p.empName)return toast('피평가자를 선택하세요','warn');
   if(!p.comment)return toast('피드백 코멘트를 입력하세요','warn');
   if(!guardGrade(p))return;
@@ -1196,6 +1382,9 @@ function guardGrade(p){
 /* ================= 제출 공통 (Microsoft Graph → SharePoint 리스트) ================= */
 /* 주의: SharePoint 내부 필드명이 field_N이라 쓰기(POST/PATCH) 시에도 field_N 키를 사용해야 함. */
 async function upsertAppeal(p,status){
+  /* 최종 방어선: 어느 경로로 들어와도(신규 작성·기존 제출본 수정 모두) 기간 밖이면 여기서 막힌다 */
+  const w=windowOf('appeal');
+  if(!w.open&&!(currentUser&&currentUser.isAdmin))throw new Error(windowMsg(w));
   const submittedAt=new Date().toISOString();
   const fields={Title:p.period,field_1:myEmail,field_2:p.empName,field_3:p.empTeam,field_4:p.empRank,
     field_5:p.core,field_6:p.collab,field_7:p.challenge,field_8:p.goal,field_9:status,
@@ -1208,6 +1397,8 @@ async function upsertAppeal(p,status){
   rebuildLog();renderAgg();
 }
 async function upsertEval(p,status){
+  const w=windowOf('eval');
+  if(!w.open&&!(currentUser&&currentUser.isAdmin))throw new Error(windowMsg(w));
   const r=emp(p.empName);const targetEmail=(r&&r.email)||'';
   const submittedAt=new Date().toISOString();
   const fields={Title:p.period,field_1:targetEmail,field_2:p.empName,field_3:p.empTeam,
@@ -1325,6 +1516,7 @@ async function postLogin(account){
     fillNames();setEvaluatorIdentity();fillSettings();
     renderAppealIdentity();
     document.getElementById('whoami').textContent=`${varName||myEmail} · ${roleLabelText()}`;
+    cacheDeadlines();refreshWindowUI();
     toast(`${roleLabelText()}(으)로 로그인했습니다`);
     applyDeepLink();
   }catch(e){
@@ -1337,6 +1529,7 @@ async function doLogout(){
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('login_err').style.display='none';
   currentUser=null;myEmail='';varName='';ROSTER=[];APPEALS=[];EVALS=[];LOG=[];
+  renderLoginDeadline();
   try{await msalReady;await msalInstance.logoutPopup();}catch(e){}
   toast('로그아웃했습니다','warn');
 }
@@ -1356,7 +1549,7 @@ function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.create
 /* ================= 설정 ================= */
 function fillSettings(){document.getElementById('set_paurl').value=CFG.paurl;document.getElementById('set_mailtag').value=CFG.mailtag;
   document.getElementById('set_roster').value=JSON.stringify(ROSTER,null,2);}
-document.getElementById('set_reset').addEventListener('click',async()=>{if(confirm('SharePoint 명단을 다시 불러옵니다.')){try{await loadAllFromSharePoint(GS.token);fillSettings();fillNames();setEvaluatorIdentity();toast('SharePoint에서 다시 불러왔습니다');}catch(e){toast('다시 불러오기 실패: '+e.message,'bad');}}});
+document.getElementById('set_reset').addEventListener('click',async()=>{if(confirm('SharePoint 명단을 다시 불러옵니다.')){try{await loadAllFromSharePoint(GS.token);fillSettings();fillNames();setEvaluatorIdentity();cacheDeadlines();refreshWindowUI();toast('SharePoint에서 다시 불러왔습니다');}catch(e){toast('다시 불러오기 실패: '+e.message,'bad');}}});
 
 /* ================= URL deep-link (로그인 후 role에 맞을 때만 적용) ================= */
 function applyDeepLink(){const q=new URLSearchParams(location.search);const role=q.get('role');
@@ -1595,6 +1788,7 @@ document.getElementById('themeBtn').addEventListener('click',()=>{
 
 /* ================= init ================= */
 (async function initAuth(){
+  renderLoginDeadline();          // 직전 로그인 때 캐시해 둔 마감일을 우선 표시
   try{
     await msalReady;
     const resp=await msalInstance.handleRedirectPromise();
@@ -1603,9 +1797,31 @@ document.getElementById('themeBtn').addEventListener('click',()=>{
       const all=msalInstance.getAllAccounts();
       if(all.length){account=all[0];msalInstance.setActiveAccount(account);}
     }
-    if(account)await postLogin(account);
+    if(account){await postLogin(account);return;}
+    /* 로그인 전이라도 M365 세션이 살아있으면 조용히 토큰을 받아 설정만 읽어 최신 마감일을 띄운다.
+       실패해도(세션 없음 등) 아무 일도 일어나지 않고 캐시 값이 그대로 남는다. */
+    try{
+      const r=await msalInstance.ssoSilent({scopes:GRAPH_SCOPES});
+      if(r&&r.accessToken){
+        const siteId=await resolveSite(r.accessToken);
+        const lists=await resolveLists(r.accessToken,siteId);
+        if(lists['설정']){
+          const items=await fetchAllItems(r.accessToken,siteId,lists['설정']);
+          const live={};items.forEach(it=>{const f=it.fields||{};if(f.Title)live[f.Title]=f.field_1||'';});
+          const el=document.getElementById('login_deadline');
+          if(el&&(live['어필작성마감']||live['평가입력마감']))renderDeadlineBar(el,live);
+        }
+      }
+    }catch(e){/* 조용히 무시 — 캐시 값으로 충분 */}
   }catch(e){console.error('MSAL 초기화 실패',e);}
 })();
+
+/* 마감 경계(예: 11:59→12:00)에서 새로고침 없이도 배너·버튼이 바뀌도록 주기적으로 갱신 */
+setInterval(()=>{
+  if(document.hidden)return;
+  if(currentUser)refreshWindowUI();
+  else renderLoginDeadline();
+},20000);
 </script>
 </body>
 </html>
