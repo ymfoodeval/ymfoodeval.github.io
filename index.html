@@ -931,10 +931,6 @@ function renderDeadlineBar(el,src){
   let html=windowLine(a)+windowLine(e);
   if(currentUser&&currentUser.isAdmin){
     const warns=[];
-    /* 대표검토마감은 게이트가 아니라 참고용 표시 (상반기는 대표 검토 절차 자체가 없음) */
-    const ceo=parseSettingParts((src||SETTINGS)['대표검토마감']);
-    if(ceo)
-      html+=`<div class="row"><span class="st">참고</span><span><b>대표 검토</b> ${fmtKST(ceo.endDisplay)} (차단 없음)</span></div>`;
     if(a.bad||e.bad)warns.push('설정 리스트의 날짜 형식을 읽지 못했습니다 (YYYY-MM-DD 또는 YYYY-MM-DD HH:MM). 해당 항목은 제한 없이 열려 있습니다.');
     const S=src||SETTINGS;
     const py=(String(S['현재평가기간']||'').match(/^(\d{4})/)||[])[1];
