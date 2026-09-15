@@ -1039,8 +1039,16 @@ async function fetchAllItems(token,siteId,listId){
 async function loadAllFromSharePoint(token){
   const siteId=await resolveSite(token);
   const lists=await resolveLists(token,siteId);
-  ['명단','어필시트','평가기록','설정'].forEach(n=>{if(!lists[n])throw new Error(`SharePoint 리스트 '${n}'을(를) 찾을 수 없습니다`);});
+  /* 리스트별로 권한을 나눠두면(예: 일반 직원에게 '평가기록' 비공개) 그 리스트는 목록에 아예 안 나온다.
+     그래서 신원 판정에 꼭 필요한 '명단'과 마감 판정에 필요한 '설정'만 필수로 두고,
+     나머지는 접근 가능한 만큼만 읽어 들인다. 예전처럼 4개를 전부 요구하면 직원 계정에서 앱이 아예 안 열림. */
+  ['명단','설정'].forEach(n=>{if(!lists[n])throw new Error(`SharePoint 리스트 '${n}'에 접근할 수 없습니다. 사이트 권한을 확인해 주세요.`);});
   GS={token,siteId,lists};
+  async function safeFetch(name){
+    if(!lists[name])return[];                       // 권한 없음 → 조용히 건너뜀
+    try{return await fetchAllItems(token,siteId,lists[name]);}
+    catch(e){console.warn(`'${name}' 로드 실패(권한 문제일 수 있음):`,e.message);return[];}
+  }
 
   /* 주의: 이 4개 리스트는 Excel 가져오기로 생성되어 SharePoint 내부 필드명이 한글 표시명이 아니라
      field_1, field_2... 형태로 자동 부여되어 있음(2026-08-14 REST API로 직접 확인). 아래 매핑은 그 내부명 기준. */
@@ -1053,14 +1061,14 @@ async function loadAllFromSharePoint(token){
     note:f.field_11||'',demo:false
   };}).filter(r=>r.name);
 
-  const appealItems=await fetchAllItems(token,siteId,lists['어필시트']);
+  const appealItems=await safeFetch('어필시트');
   APPEALS=appealItems.map(it=>{const f=it.fields||{};return{
     spId:it.id,period:f.Title||'',targetEmail:(f.field_1||'').toLowerCase(),empName:f.field_2||'',
     empTeam:f.field_3||'',empRank:f.field_4||'',core:f.field_5||'',collab:f.field_6||'',
     challenge:f.field_7||'',goal:f.field_8||'',status:f.field_9||'',submittedAt:f.field_10||''
   };}).filter(a=>a.targetEmail&&a.targetEmail!=='example@ymfood.com');
 
-  const evalItems=await fetchAllItems(token,siteId,lists['평가기록']);
+  const evalItems=await safeFetch('평가기록');
   EVALS=evalItems.map(it=>{const f=it.fields||{};return{
     spId:it.id,period:f.Title||'',targetEmail:(f.field_1||'').toLowerCase(),empName:f.field_2||'',
     empTeam:f.field_3||'',evaluatorEmail:(f.field_4||'').toLowerCase(),evaluatorName:f.field_5||'',
@@ -1381,6 +1389,7 @@ async function upsertAppeal(p,status){
   /* 최종 방어선: 어느 경로로 들어와도(신규 작성·기존 제출본 수정 모두) 기간 밖이면 여기서 막힌다 */
   const w=windowOf('appeal');
   if(!w.open&&!(currentUser&&currentUser.isAdmin))throw new Error(windowMsg(w));
+  if(!GS.lists||!GS.lists['어필시트'])throw new Error('어필시트에 쓰기 권한이 없습니다. 관리자에게 문의해 주세요.');
   const submittedAt=new Date().toISOString();
   const fields={Title:p.period,field_1:myEmail,field_2:p.empName,field_3:p.empTeam,field_4:p.empRank,
     field_5:p.core,field_6:p.collab,field_7:p.challenge,field_8:p.goal,field_9:status,
@@ -1395,6 +1404,7 @@ async function upsertAppeal(p,status){
 async function upsertEval(p,status){
   const w=windowOf('eval');
   if(!w.open&&!(currentUser&&currentUser.isAdmin))throw new Error(windowMsg(w));
+  if(!GS.lists||!GS.lists['평가기록'])throw new Error('평가기록에 쓰기 권한이 없습니다. 관리자에게 문의해 주세요.');
   const r=emp(p.empName);const targetEmail=(r&&r.email)||'';
   const submittedAt=new Date().toISOString();
   const fields={Title:p.period,field_1:targetEmail,field_2:p.empName,field_3:p.empTeam,
