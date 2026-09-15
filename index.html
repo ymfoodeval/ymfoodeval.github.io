@@ -557,8 +557,8 @@
         <div class="header-tools">
           <label for="period">평가기간</label>
           <select class="per" id="period">
-            <option value="2026-H1">2026 상반기</option>
-            <option value="2026-H2">2026 하반기</option>
+            <option value="2026-H1">2026 사전 평가</option>
+            <option value="2026-H2">2026 정식 평가</option>
           </select>
           <span class="chip ghost" id="whoami"></span>
           <button class="themebtn" id="themeBtn" type="button" title="다크모드 전환">
@@ -674,11 +674,11 @@
         </div>
         <div class="capnote" id="cap_note"></div>
       </div>
-      <div class="hint" id="ev_grade_hidden_note" style="margin-top:6px">상반기는 등급 없이 피드백 코멘트만 작성합니다. 등급은 하반기부터 부여합니다.</div>
+      <div class="hint" id="ev_grade_hidden_note" style="margin-top:6px">사전 평가는 등급 없이 피드백 코멘트만 작성합니다. 등급은 정식 평가부터 부여합니다.</div>
 
       <div class="field full" style="margin-top:16px">
         <label class="lb">피드백 코멘트<span class="req">*</span></label>
-        <textarea class="tx" id="ev_comment" placeholder="등급 근거와 강점·개선점을 구체적으로. 하반기 평가 시 이 코멘트가 참고 자료로 표시됩니다."></textarea>
+        <textarea class="tx" id="ev_comment" placeholder="등급 근거와 강점·개선점을 구체적으로. 정식 평가 시 이 코멘트가 참고 자료로 표시됩니다."></textarea>
       </div>
 
       <div id="ev_gauge_section">
@@ -1144,7 +1144,7 @@ function load(k,def){try{const v=store.get(k);return v?JSON.parse(v):def;}catch(
 function save(k,v){store.set(k,JSON.stringify(v));}
 function period(){return document.getElementById('period').value;}
 function prevPeriod(p){return p==="2026-H2"?"2026-H1":null;}
-function periodLabel(p){const m=/^(\d{4})-H([12])$/.exec(p||'');return m?`${m[1]} ${m[2]==='1'?'상반기':'하반기'}`:(p||'');}
+function periodLabel(p){const m=/^(\d{4})-H([12])$/.exec(p||'');return m?`${m[1]} ${m[2]==='1'?'사전 평가':'정식 평가'}`:(p||'');}
 function emp(name){return ROSTER.find(r=>r.name===name);}
 function stageChain(r){const p=period();return p==="2026-H1"?[['e1','1차']]:[['e1','1차'],['e2','2차'],['e3','3차']];}
 /* 평가대상 범위: SharePoint '명단' 리스트의 평가대상 컬럼(예/아니요)이 기준입니다. */
@@ -1252,7 +1252,7 @@ function setEvaluatorIdentity(){
   resetEvalBody();
 }
 /* S 옵션 활성/비활성: 대표 전용 + 팀 성과(팀장 대상) A캡 */
-/* 상반기(2026-H1)는 등급 없이 피드백만 작성 — 등급 부여는 하반기부터 */
+/* 사전 평가(2026-H1)는 등급 없이 피드백만 작성 — 등급 부여는 정식 평가(2026-H2)부터 */
 function isGradedPeriod(){return period()!=='2026-H1';}
 function applyEvalPeriodVisibility(){
   const graded=isGradedPeriod();
@@ -1287,10 +1287,10 @@ document.getElementById('ev_target').addEventListener('change',e=>{
   if(ap){box.innerHTML=kv('핵심성과',ap.core)
     +kv('협업·조직기여',ap.collab)+kv('도전·개선',ap.challenge)+kv('차기목표',ap.goal);}
   else box.innerHTML='<span class="hint">해당 피평가자의 어필 제출 내역이 없습니다. (구두 확인 후 평가 가능)</span>';
-  // 상반기 참조
+  // 사전 평가 기록 참조
   const prev=prevPeriod(period());const pv=document.getElementById('ev_prev');pv.innerHTML='';
   if(prev){const pe=LOG.filter(x=>x.kind==='eval'&&x.empName===name&&x.period===prev);
-    if(pe.length){pv.innerHTML=`<div class="prevbox"><div class="h">상반기 평가 기록 (참고)</div>`+
+    if(pe.length){pv.innerHTML=`<div class="prevbox"><div class="h">사전 평가 기록 (참고)</div>`+
       pe.map(x=>`<div class="kv"><b>${x.evaluator} · ${x.evalStage} · <span class="gd ${x.grade}">${x.grade}</span></b><span>${esc(x.comment||'')}</span></div>`).join('')+`</div>`;}}
   // 기존 평가 불러오기
   const mine=LOG.filter(x=>x.kind==='eval'&&x.empName===name&&x.period===period()&&x.evaluator===document.getElementById('ev_evaluator').value).slice(-1)[0];
@@ -1359,7 +1359,7 @@ document.getElementById('ev_submit').addEventListener('click',async()=>{
   if(!guardGrade(p))return;
   try{
     await upsertEval(p,'제출완료');
-    const subj=`${CFG.mailtag} ${p.empName}님 ${periodLabel(p.period)} 평가 피드백`;
+    const subj=`${CFG.mailtag} ${p.empName}님 ${periodLabel(p.period)} 피드백`;
     const gradeLine=p.grade?`[등급] ${p.grade} (${Math.round(p.factor*100)}%)\n`:'';
     const body=`${p.evaluator}님의 평가가 등록되었습니다.\n\n${gradeLine}[피드백]\n${p.comment}`;
     const r=emp(p.empName);const toAddr=companyEmailOf(r&&r.email);
