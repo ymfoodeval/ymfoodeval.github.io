@@ -642,6 +642,7 @@
       <div class="actions" style="margin-top:16px">
         <button class="btn" id="ap_save">임시저장</button>
         <button class="btn primary" id="ap_submit">제출</button>
+        <span id="ap_stamp" style="align-self:center;margin-left:8px;font-size:12px;color:#8a8a8a"></span>
       </div>
     </div>
   </section>
@@ -1226,11 +1227,24 @@ function loadAppealDraft(name){
   document.getElementById('ap_challenge').value=a?.challenge||'';
   document.getElementById('ap_goal').value=a?.goal||'';
   const el=document.getElementById('ap_core');if(el)el.value=a?.core||'';
+  renderAppealStamp();
+}
+/* 제출 시각 표시 (KST) — 예: '제출완료: 2026년 9월 30일 9시 49분' */
+function fmtKstLong(iso){
+  const d=new Date(iso);if(isNaN(d))return'';
+  const p={};new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',hourCycle:'h23'})
+    .formatToParts(d).forEach(x=>p[x.type]=x.value);
+  return `${p.year}년 ${p.month}월 ${p.day}일 ${Number(p.hour)}시 ${Number(p.minute)}분`;
+}
+function renderAppealStamp(){
+  const s=document.getElementById('ap_stamp');if(!s)return;
+  const a=APPEALS.find(x=>x.period===period()&&x.targetEmail===myEmail);
+  s.textContent=(a&&a.status==='제출완료'&&a.submittedAt)?'제출완료: '+fmtKstLong(a.submittedAt):'';
 }
 async function saveAppealDraft(){const name=apName();if(!name)return toast('로그인 정보를 확인하세요','warn');
   if(!guardWindow('appeal'))return;
   const p=appealPayload();if(!p)return toast('명단에 등록되지 않은 이름입니다','warn');
-  try{await upsertAppeal(p,'임시저장');toast('임시저장했습니다');}
+  try{await upsertAppeal(p,'임시저장');renderAppealStamp();toast('임시저장했습니다');}
   catch(e){toast('임시저장 실패: '+e.message,'bad');}
 }
 document.getElementById('ap_save').addEventListener('click',saveAppealDraft);
@@ -1240,6 +1254,7 @@ document.getElementById('ap_submit').addEventListener('click',async()=>{
   if(!p.core)return toast('핵심 성과를 입력하세요','warn');
   try{
     await upsertAppeal(p,'제출완료');
+    renderAppealStamp();
     toast('제출 완료');
   }catch(e){toast('제출 실패: '+e.message,'bad');}
 });
