@@ -996,6 +996,14 @@ async function acquireToken(account){
     return r.accessToken;
   }
 }
+/* 로그인 시 받은 토큰은 약 1시간 뒤 만료된다. 저장·제출 직전마다 새로 받아(만료 전이면 캐시 재사용) GS.token을 갱신한다.
+   (2026-10-02: 오래 열어둔 화면에서 평가 제출 시 401로 실패하던 문제 수정) */
+async function refreshGraphToken(){
+  const account=msalInstance.getActiveAccount();
+  if(!account)throw new Error('로그인 세션이 만료되었습니다. 새로고침 후 다시 로그인해 주세요.');
+  GS.token=await acquireToken(account);
+  return GS.token;
+}
 async function graphGet(token,url){
   const r=await fetch(url,{headers:{Authorization:'Bearer '+token}});
   noteServerDate(r);
@@ -1417,6 +1425,7 @@ async function upsertAppeal(p,status){
   const w=windowOf('appeal');
   if(!w.open&&!(currentUser&&currentUser.isAdmin))throw new Error(windowMsg(w));
   if(!GS.lists||!GS.lists['어필시트'])throw new Error('어필시트에 쓰기 권한이 없습니다. 관리자에게 문의해 주세요.');
+  await refreshGraphToken();
   const submittedAt=new Date().toISOString();
   const fields={Title:p.period,field_1:myEmail,field_2:p.empName,field_3:p.empTeam,field_4:p.empRank,
     field_5:p.core,field_6:p.collab,field_7:p.challenge,field_8:p.goal,field_9:status,
@@ -1432,6 +1441,7 @@ async function upsertEval(p,status){
   const w=windowOf('eval');
   if(!w.open&&!(currentUser&&currentUser.isAdmin))throw new Error(windowMsg(w));
   if(!GS.lists||!GS.lists['평가기록'])throw new Error('평가기록에 쓰기 권한이 없습니다. 관리자에게 문의해 주세요.');
+  await refreshGraphToken();
   const r=emp(p.empName);const targetEmail=(r&&r.email)||'';
   const submittedAt=new Date().toISOString();
   const fields={Title:p.period,field_1:targetEmail,field_2:p.empName,field_3:p.empTeam,
@@ -1576,13 +1586,13 @@ document.getElementById('ex_csv').addEventListener('click',()=>{
   dl(new Blob(['﻿'+csv],{type:'text/csv'}),`성과평가_${period()}.csv`);toast('CSV를 내려받았습니다');
 });
 document.getElementById('ex_json').addEventListener('click',()=>{dl(new Blob([JSON.stringify(LOG,null,2)],{type:'application/json'}),`성과평가_${period()}.json`);toast('JSON을 내려받았습니다');});
-document.getElementById('ex_clear').addEventListener('click',async()=>{if(!GS.token)return toast('로그인 후 이용하세요','warn');try{await loadAllFromSharePoint(GS.token);renderAgg();toast('SharePoint 데이터를 다시 불러왔습니다');}catch(e){toast('새로고침 실패: '+e.message,'bad');}});
+document.getElementById('ex_clear').addEventListener('click',async()=>{if(!GS.token)return toast('로그인 후 이용하세요','warn');try{await loadAllFromSharePoint(await refreshGraphToken());renderAgg();toast('SharePoint 데이터를 다시 불러왔습니다');}catch(e){toast('새로고침 실패: '+e.message,'bad');}});
 function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
 
 /* ================= 설정 ================= */
 function fillSettings(){document.getElementById('set_paurl').value=CFG.paurl;document.getElementById('set_mailtag').value=CFG.mailtag;
   document.getElementById('set_roster').value=JSON.stringify(ROSTER,null,2);}
-document.getElementById('set_reset').addEventListener('click',async()=>{if(confirm('SharePoint 명단을 다시 불러옵니다.')){try{await loadAllFromSharePoint(GS.token);fillSettings();fillNames();setEvaluatorIdentity();cacheDeadlines();refreshWindowUI();toast('SharePoint에서 다시 불러왔습니다');}catch(e){toast('다시 불러오기 실패: '+e.message,'bad');}}});
+document.getElementById('set_reset').addEventListener('click',async()=>{if(confirm('SharePoint 명단을 다시 불러옵니다.')){try{await loadAllFromSharePoint(await refreshGraphToken());fillSettings();fillNames();setEvaluatorIdentity();cacheDeadlines();refreshWindowUI();toast('SharePoint에서 다시 불러왔습니다');}catch(e){toast('다시 불러오기 실패: '+e.message,'bad');}}});
 
 /* ================= URL deep-link (로그인 후 role에 맞을 때만 적용) ================= */
 function applyDeepLink(){const q=new URLSearchParams(location.search);const role=q.get('role');
