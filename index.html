@@ -807,7 +807,9 @@ const MSAL_CONFIG={
 };
 const msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);
 const msalReady=msalInstance.initialize();
-const GRAPH_SCOPES=['User.Read','Sites.ReadWrite.All'];
+/* 2026-10-02: Mail.Send / Mail.Send.Shared 관리자 동의 완료 확인(Entra > 엔터프라이즈 앱 > 권한). 로그인 때 메일 권한까지 함께 받아 두어
+   평가 제출 시점에 별도 팝업(차단되면 메일 실패)이 뜨지 않게 함. */
+const GRAPH_SCOPES=['User.Read','Sites.ReadWrite.All','Mail.Send','Mail.Send.Shared'];
 const GRAPH_LOGIN_REQUEST={scopes:GRAPH_SCOPES};
 /* Mail.Send는 관리자 동의가 아직 안 끝난 별도 권한이라 로그인 필수 스코프에서 분리함.
    같이 요청하면 동의 안 된 스코프 때문에 로그인 자체가 실패함(테넌트가 사용자 동의를 막아둠) — sendMailAsSite에서만 별도로 요청.
@@ -1396,7 +1398,13 @@ document.getElementById('ev_submit').addEventListener('click',async()=>{
         await sendMailAsSite(toAddr,subj,body);
         toast('평가 제출 완료 · 본인에게 피드백 메일이 발송되었습니다');
       }catch(mailErr){
-        toast('평가는 저장됐지만 메일 발송에 실패했습니다: '+mailErr.message,'warn');
+        const detail=(mailErr&&(mailErr.errorCode||mailErr.name)?'['+(mailErr.errorCode||mailErr.name)+'] ':'')+(mailErr&&mailErr.message||String(mailErr));
+        console.error('피드백 메일 발송 실패',mailErr);
+        toast('평가는 저장됐지만 메일 발송에 실패했습니다','warn');
+        alert('평가는 저장(제출완료)되었지만 피드백 메일 발송에 실패했습니다.\n\n'
+          +'[평가 제출] 버튼을 한 번 더 누르면 메일을 다시 보냅니다.\n'
+          +'계속 실패하면 이 창을 캡처해 경영관리팀 강태욱 사원에게 보내 주세요.\n\n'
+          +'오류 내용: '+detail.slice(0,400));
       }
     }else{
       toast('평가 제출 완료 (수신자 이메일을 찾지 못해 메일은 발송되지 않았습니다)','warn');
