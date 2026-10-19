@@ -707,7 +707,7 @@
 
       <div class="actions" style="margin-top:16px">
         <button class="btn" id="ev_save">저장</button>
-        <button class="btn primary" id="ev_submit">평가 제출 · 본인에게 피드백 통지</button>
+        <button class="btn primary" id="ev_submit">평가 제출</button>
         <span id="ev_stamp" style="align-self:center;margin-left:8px;font-size:12px;color:#8a8a8a"></span>
       </div>
     </div>
@@ -778,7 +778,7 @@
       <div class="note">
         <b>흐름:</b> Microsoft 계정으로 로그인(Azure AD/MSAL) → Microsoft Graph API로 SharePoint 사이트
         <code>ymfoodcorp.sharepoint.com/sites/ymfoodeval</code>의 <b>명단·어필시트·평가기록·설정</b> 4개 리스트를 직접 읽고 씁니다.
-        제출은 즉시 SharePoint 리스트에 행이 생성·수정됩니다. 어필 제출 시에는 별도 알림이 없으며, 평가 제출 시 피평가자에게 피드백 메일이 자동 발송됩니다(발신: evalnoreply).
+        제출은 즉시 SharePoint 리스트에 행이 생성·수정됩니다. 어필 제출 시에는 별도 알림이 없으며, 평가 제출 시 메일은 즉시 발송되지 않으며, 평가 입력 기간 마감 후 제출완료 건의 피드백 메일이 evalnoreply에서 일괄 발송됩니다.
         데이터는 이 화면에서 CSV/JSON으로 내보낼 수 있습니다.<br><br>
         <b>권한 판정:</b> 로그인한 계정의 이메일을 '명단' 리스트의 <code>계정</code> 열과 대조해 자동으로 결정됩니다 —
         <code>평가대상</code>=예 → 어필시트 탭, <code>1차/2차/3차평가자</code>에 본인 이름이 있으면 → 평가자입력 탭,
@@ -1026,9 +1026,9 @@ function renderEvalLock(){
     return;
   }
   if(!(rec&&rec.status==='제출완료'))return;
-  if(stamp)stamp.textContent='제출완료: '+fmtKstLong(rec.submittedAt)+(MAIL_PENDING[target]?' · 메일 미발송(재발송 필요)':'');
+  if(stamp)stamp.textContent='제출완료: '+fmtKstLong(rec.submittedAt);
   setBtnLock('ev_save',true,'이미 제출된 평가입니다');
-  if(!MAIL_PENDING[target])setBtnLock('ev_submit',true,'이미 제출된 평가입니다');
+  setBtnLock('ev_submit',true,'이미 제출된 평가입니다');
   const c=document.getElementById('ev_comment');if(c)c.readOnly=true;
   document.querySelectorAll('input[name=grade]').forEach(i=>i.disabled=true);
 }
@@ -1477,33 +1477,15 @@ document.getElementById('ev_submit').addEventListener('click',async()=>{
   if(!guardWindow('eval'))return;
   const p=evalPayload();if(!p.empName)return toast('피평가자를 선택하세요','warn');
   if(!p.comment)return toast('피드백 코멘트를 입력하세요','warn');
-  if(isEvalSubmitted(p.empName)&&!MAIL_PENDING[p.empName])return toast('이미 제출된 평가입니다','warn');
+  if(isEvalSubmitted(p.empName))return toast('이미 제출된 평가입니다','warn');
   if(!guardGrade(p))return;
-  const subBtn=document.getElementById('ev_submit');subBtn.disabled=true;   // 연타로 인한 중복 메일 방지
+  if(!confirm(`${p.empName}님 평가를 제출합니다.\n제출 후에는 수정할 수 없습니다.\n\n피드백 메일은 평가 입력 기간이 끝난 뒤 일괄 발송됩니다.`))return;
+  const subBtn=document.getElementById('ev_submit');subBtn.disabled=true;   // 연타 방지
   try{
+    /* 제출 즉시 메일 발송은 폐지(2026-10). 피드백 메일은 평가 입력 마감 후
+       evalnoreply 공용 메일함에서 일괄 발송한다(별도 자동화). */
     await upsertEval(p,'제출완료');
-    delete MAIL_PENDING[p.empName];
-    const subj=`${CFG.mailtag} ${p.empName}님 ${periodLabel(p.period)} 피드백`;
-    const gradeLine=p.grade?`[등급] ${p.grade} (${Math.round(p.factor*100)}%)\n`:'';
-    const body=`${p.evaluator}님의 평가가 등록되었습니다.\n\n${gradeLine}[피드백]\n${p.comment}`;
-    const r=emp(p.empName);const toAddr=companyEmailOf(r&&r.email);
-    if(toAddr){
-      try{
-        await sendMailAsSite(toAddr,subj,body);
-        toast('평가 제출 완료 · 본인에게 피드백 메일이 발송되었습니다');
-      }catch(mailErr){
-        const detail=(mailErr&&(mailErr.errorCode||mailErr.name)?'['+(mailErr.errorCode||mailErr.name)+'] ':'')+(mailErr&&mailErr.message||String(mailErr));
-        console.error('피드백 메일 발송 실패',mailErr);
-        MAIL_PENDING[p.empName]=true;
-        toast('평가는 저장됐지만 메일 발송에 실패했습니다','warn');
-        alert('평가는 저장(제출완료)되었지만 피드백 메일 발송에 실패했습니다.\n\n'
-          +'[평가 제출] 버튼을 한 번 더 누르면 메일을 다시 보냅니다.\n'
-          +'계속 실패하면 이 창을 캡처해 경영관리팀 강태욱 사원에게 보내 주세요.\n\n'
-          +'오류 내용: '+detail.slice(0,400));
-      }
-    }else{
-      toast('평가 제출 완료 (수신자 이메일을 찾지 못해 메일은 발송되지 않았습니다)','warn');
-    }
+    toast('평가 제출 완료 · 피드백 메일은 평가 기간 마감 후 일괄 발송됩니다');
   }catch(e){toast('제출 실패: '+e.message,'bad');}
   finally{refreshWindowUI();}
 });
