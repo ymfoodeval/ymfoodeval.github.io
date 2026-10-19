@@ -508,6 +508,9 @@
   #ev_comment{min-height:200px}
   /* 제목 옆 글자수 안내 */
   .lim{margin-left:8px;font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:0}
+  /* 입력 글자 수 표시 (300 / 1,000자) — 초과 시 빨간색 */
+  .cnt{text-align:right;font-size:12px;color:var(--muted);margin-top:4px}
+  .cnt.over{color:#d93025;font-weight:700}
 
   /* 평가기간 셀렉트: 라벨이 길어져(2026 사전/정식 평가) 끝 글자가 잘려서 최소 폭 확보 */
   .header-tools select.per{min-width:155px;padding-right:38px}
@@ -683,7 +686,7 @@
       <div class="hint" id="ev_grade_hidden_note" style="margin-top:6px">사전 평가는 등급 없이 피드백 코멘트만 작성합니다. 등급은 정식 평가부터 부여합니다.</div>
 
       <div class="field full" style="margin-top:16px">
-        <label class="lb">피드백 코멘트<span class="req">*</span></label>
+        <label class="lb">피드백 코멘트<span class="req">*</span><span class="lim">1,000자 이내</span></label>
         <textarea class="tx" id="ev_comment" placeholder="등급 근거와 강점·개선점을 구체적으로. 정식 평가 시 이 코멘트가 참고 자료로 표시됩니다."></textarea>
       </div>
 
@@ -1273,7 +1276,27 @@ function fmtKstLong(iso){
     .formatToParts(d).forEach(x=>p[x.type]=x.value);
   return `${p.year}년 ${p.month}월 ${p.day}일 ${Number(p.hour)}시 ${Number(p.minute)}분`;
 }
+/* 글자 수 표시: 각 입력칸 아래에 '(300 / 1,000자)' 형태로 표시. 공백 포함 글자 수.
+   값을 코드로 채운 뒤에는 updateCharCounts()를 호출해 갱신한다. */
+const CHAR_LIMITS=[['ap_core',1000],['ap_collab',500],['ap_challenge',500],['ap_goal',500],['ev_comment',1000]];
+function updateCharCounts(){
+  CHAR_LIMITS.forEach(([id,max])=>{
+    const t=document.getElementById(id);const c=document.getElementById('cnt_'+id);if(!t||!c)return;
+    const n=[...(t.value||'')].length;
+    c.textContent=`(${n.toLocaleString()} / ${max.toLocaleString()}자)`;
+    c.classList.toggle('over',n>max);
+    c.title=n>max?`${(n-max).toLocaleString()}자 초과`:'';
+  });
+}
+CHAR_LIMITS.forEach(([id])=>{
+  const t=document.getElementById(id);if(!t||document.getElementById('cnt_'+id))return;
+  const c=document.createElement('div');c.className='cnt';c.id='cnt_'+id;
+  t.insertAdjacentElement('afterend',c);
+  t.addEventListener('input',updateCharCounts);
+});
+updateCharCounts();
 function renderAppealStamp(){
+  updateCharCounts();
   const s=document.getElementById('ap_stamp');if(!s)return;
   const a=APPEALS.find(x=>x.period===period()&&x.targetEmail===myEmail);
   s.textContent=(a&&a.status==='제출완료'&&a.submittedAt)?'제출완료: '+fmtKstLong(a.submittedAt):'';
@@ -1354,6 +1377,7 @@ document.getElementById('ev_target').addEventListener('change',e=>{
   document.querySelectorAll('input[name=grade]').forEach(i=>i.checked=(i.value===(mine?.grade||'B')));
   document.getElementById('ev_comment').value=mine?.comment||'';
   document.getElementById('ev_comment').readOnly=false;
+  updateCharCounts();
   document.querySelectorAll('input[name=grade]').forEach(i=>i.disabled=false);
   applyEvalPeriodVisibility();
   applyGradeRules();
