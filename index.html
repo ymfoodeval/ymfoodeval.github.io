@@ -657,8 +657,9 @@
       <p class="sub">담당 피평가자의 어필을 확인하고 등급·피드백을 입력합니다. 팀 분포와 예산 게이지가 실시간으로 표시됩니다.</p>
       <div class="grid">
         <div class="field">
-          <label class="lb">평가자 (본인)<span class="req">*</span></label>
+          <label class="lb" id="ev_evaluator_lb">평가자 (본인)<span class="req">*</span></label>
           <input class="tx" id="ev_evaluator" readonly />
+          <select class="tx hidden" id="ev_evaluator_pick"><option value="">— 평가자 선택 (열람) —</option></select>
         </div>
         <div class="field">
           <label class="lb">피평가자<span class="req">*</span></label>
@@ -998,7 +999,10 @@ function refreshWindowUI(){
 const MAIL_PENDING={};
 function myEvalRec(target){
   const r=emp(target);if(!r)return null;
-  return EVALS.find(x=>x.period===period()&&x.targetEmail===(r.email||'')&&x.evaluatorEmail===myEmail)||null;
+  let evEmail=myEmail;
+  if(VIEW_ONLY){const ev=emp(document.getElementById('ev_evaluator').value);evEmail=(ev&&ev.email)||'';}
+  const lc=s=>(s||'').toLowerCase();
+  return EVALS.find(x=>x.period===period()&&lc(x.targetEmail)===lc(r.email)&&lc(x.evaluatorEmail)===lc(evEmail))||null;
 }
 function isEvalSubmitted(target){const rec=myEvalRec(target);return !!(rec&&rec.status==='제출완료');}
 function setBtnLock(id,lock,msg){
@@ -1009,8 +1013,18 @@ function renderEvalLock(){
   const t=document.getElementById('ev_target');const stamp=document.getElementById('ev_stamp');
   const target=t?t.value:'';
   if(stamp)stamp.textContent='';
+  if(VIEW_ONLY){
+    setBtnLock('ev_save',true,'관리자 열람 모드에서는 저장할 수 없습니다');
+    setBtnLock('ev_submit',true,'관리자 열람 모드에서는 제출할 수 없습니다');
+  }
   if(!target)return;
   const rec=myEvalRec(target);
+  if(VIEW_ONLY){
+    if(stamp)stamp.textContent='열람 전용 · '+(rec?(rec.status==='제출완료'?'제출완료: '+fmtKstLong(rec.submittedAt):'작성중'):'미작성');
+    const c=document.getElementById('ev_comment');if(c)c.readOnly=true;
+    document.querySelectorAll('input[name=grade]').forEach(i=>i.disabled=true);
+    return;
+  }
   if(!(rec&&rec.status==='제출완료'))return;
   if(stamp)stamp.textContent='제출완료: '+fmtKstLong(rec.submittedAt)+(MAIL_PENDING[target]?' · 메일 미발송(재발송 필요)':'');
   setBtnLock('ev_save',true,'이미 제출된 평가입니다');
@@ -1163,7 +1177,7 @@ function allowedTabs(){
   if(!currentUser)return[];
   const t=[];
   if(currentUser.isTarget)t.push('appeal');
-  if(currentUser.isEvaluator||currentUser.isCEO)t.push('eval');
+  if(currentUser.isEvaluator||currentUser.isCEO||currentUser.isAdmin)t.push('eval');
   if(currentUser.isCEO||currentUser.isAdmin)t.push('agg');
   if(currentUser.isAdmin)t.push('set');
   return t;
@@ -1323,14 +1337,35 @@ document.getElementById('ap_submit').addEventListener('click',async()=>{
 function targetsOf(evaluator){const out=[];evaluees().forEach(r=>{stageChain(r).forEach(([k,label])=>{if(r[k]===evaluator)out.push({r,stage:label});});});return out;}
 /* 평가자는 드롭다운으로 아무나 고를 수 없게, 로그인한 본인 이름으로 고정.
    isEvaluator(=본인이 누군가의 e1/e2/e3에 매핑돼 있음)일 때만 값이 채워지고, 그 본인 기준 피평가자 목록만 노출됨. */
-function setEvaluatorIdentity(){
-  const sel=document.getElementById('ev_evaluator');
-  const name=(currentUser&&currentUser.isEvaluator)?varName:'';
-  sel.value=name;
+/* 관리자 열람 모드: 평가자가 아닌 관리자는 평가자를 골라 그 평가자의 입력 내용을 읽기 전용으로 본다.
+   (저장·제출 불가. 평가기록 전체 읽기 권한이 있는 관리자 계정 기준) */
+var VIEW_ONLY=false;
+function fillEvalTargets(name){
   const t=document.getElementById('ev_target');const list=targetsOf(name);
   t.innerHTML='<option value="">— 피평가자 선택 —</option>'+list.map(o=>`<option value="${o.r.name}">${o.r.name} · ${o.r.team} (${o.stage})</option>`).join('');
   resetEvalBody();
 }
+function setEvaluatorIdentity(){
+  const sel=document.getElementById('ev_evaluator');
+  const pick=document.getElementById('ev_evaluator_pick');
+  const lb=document.getElementById('ev_evaluator_lb');
+  VIEW_ONLY=!!(currentUser&&!currentUser.isEvaluator&&currentUser.isAdmin);
+  sel.classList.toggle('hidden',VIEW_ONLY);pick.classList.toggle('hidden',!VIEW_ONLY);
+  lb.innerHTML=VIEW_ONLY?'평가자 (관리자 열람)':'평가자 (본인)<span class="req">*</span>';
+  if(VIEW_ONLY){
+    const names=[...new Set(evaluees().flatMap(r=>stageChain(r).map(([k])=>r[k]).filter(Boolean)))];
+    pick.innerHTML='<option value="">— 평가자 선택 (열람) —</option>'+names.map(n=>`<option value="${n}">${n} (${targetsOf(n).length}명)</option>`).join('');
+    sel.value='';fillEvalTargets('');
+    return;
+  }
+  const name=(currentUser&&currentUser.isEvaluator)?varName:'';
+  sel.value=name;
+  fillEvalTargets(name);
+}
+document.getElementById('ev_evaluator_pick').addEventListener('change',e=>{
+  document.getElementById('ev_evaluator').value=e.target.value;
+  fillEvalTargets(e.target.value);
+});
 /* S 옵션 활성/비활성: 대표 전용 + 팀 성과(팀장 대상) A캡 */
 /* 사전 평가(2026-H1)는 등급 없이 피드백만 작성 — 등급 부여는 정식 평가(2026-H2)부터 */
 function isGradedPeriod(){return period()!=='2026-H1';}
@@ -1430,7 +1465,7 @@ function evalPayload(){const evaluator=document.getElementById('ev_evaluator').v
   p.evaluator=evaluator;p.evalStage=stage;p.grade=grade;p.factor=grade?FACTOR[grade]:1;p.comment=g('ev_comment');
   return p;
 }
-document.getElementById('ev_save').addEventListener('click',async()=>{if(!guardWindow('eval'))return;
+document.getElementById('ev_save').addEventListener('click',async()=>{if(VIEW_ONLY)return toast('관리자 열람 모드입니다','warn');if(!guardWindow('eval'))return;
   const p=evalPayload();if(!p.empName)return toast('피평가자를 선택하세요','warn');
   if(isEvalSubmitted(p.empName))return toast('이미 제출된 평가는 저장할 수 없습니다','warn');
   if(!guardGrade(p))return;
@@ -1438,6 +1473,7 @@ document.getElementById('ev_save').addEventListener('click',async()=>{if(!guardW
   catch(e){toast('저장 실패: '+e.message,'bad');}
 });
 document.getElementById('ev_submit').addEventListener('click',async()=>{
+  if(VIEW_ONLY)return toast('관리자 열람 모드입니다','warn');
   if(!guardWindow('eval'))return;
   const p=evalPayload();if(!p.empName)return toast('피평가자를 선택하세요','warn');
   if(!p.comment)return toast('피드백 코멘트를 입력하세요','warn');
