@@ -511,6 +511,40 @@
   /* 입력 글자 수 표시 (300 / 1,000자) — 초과 시 빨간색 */
   .cnt{text-align:right;font-size:12px;color:var(--muted);margin-top:4px}
   .cnt.over{color:#d93025;font-weight:700}
+  /* ===== 2026 정식평가(H2) 어필시트·평가 항목 ===== */
+  .tx.sm{min-height:90px}
+  .help{position:relative;display:inline-flex;margin-left:8px;vertical-align:middle;text-transform:none;letter-spacing:0}
+  .help .q{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--brand1);color:var(--brand1);font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:help;background:rgba(255,255,255,.85)}
+  .help .tip{display:none;position:absolute;top:26px;left:-14px;width:340px;background:#fff;color:#333;border:1px solid #F2B48A;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.18);padding:14px;z-index:50;font-weight:400}
+  .help:hover .tip,.help:focus-within .tip{display:block}
+  .help .tip .ph{height:130px;border-radius:8px;background:repeating-linear-gradient(45deg,#fbe9dc,#fbe9dc 10px,#fdf3ec 10px,#fdf3ec 20px);display:flex;align-items:center;justify-content:center;color:#B84E0F;font-size:12px;margin-bottom:10px;overflow:hidden}
+  .help .tip .ph img{width:100%;height:100%;object-fit:cover}
+  .help .tip h4{margin:0 0 6px;font-size:13.5px;color:#B84E0F}
+  .help .tip p{margin:0;font-size:12.5px;line-height:1.65}
+  .compitem{border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:rgba(255,255,255,.55)}
+  .compitem .row{display:flex;gap:10px;align-items:center}
+  .compitem .row input{max-width:280px}
+  .compitem .del{margin-left:auto;border:none;background:none;color:var(--muted);cursor:pointer;font-size:12px}
+  .addbtn{border-style:dashed}
+  .actchips{display:flex;gap:8px;margin:0 0 8px}
+  .actchip{border:1px solid rgba(0,0,0,.15);border-radius:8px;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer;background:#fff;color:var(--muted)}
+  .actchip.on{background:var(--brand1);border-color:var(--brand1);color:#fff;font-weight:700}
+  .leaderbox{margin-top:22px;padding:16px 18px;border-radius:14px;background:rgba(252,238,228,.8);border:1px solid #F2B48A}
+  .leadertag{font-size:11px;background:#B84E0F;color:#fff;border-radius:6px;padding:2px 8px;margin-left:6px;letter-spacing:0}
+  table.evitems{width:100%;border-collapse:collapse;margin-top:4px}
+  table.evitems th{font-size:12px;color:var(--muted);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid rgba(0,0,0,.1)}
+  table.evitems td{padding:10px 8px;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:top}
+  table.evitems td b{font-size:14px}
+  table.evitems td small{display:block;color:var(--muted);font-size:12px;margin-top:3px;line-height:1.5}
+  table.evitems .w{font-weight:700;color:var(--brand1);white-space:nowrap}
+  .igr{display:flex;gap:6px}
+  .igr button{width:40px;height:32px;border:1px solid rgba(0,0,0,.15);border-radius:8px;background:#fff;font:inherit;font-weight:700;color:var(--muted);cursor:pointer}
+  .igr button.on{background:var(--brand1);border-color:var(--brand1);color:#fff}
+  .igr button:disabled{cursor:not-allowed;opacity:.7}
+  table.evitems input{font-size:12.5px;padding:7px 10px}
+  .evresult{display:flex;gap:16px;align-items:center;background:rgba(252,238,228,.85);border:1px solid #F2B48A;border-radius:12px;padding:12px 16px;margin-top:12px;font-size:13px}
+  .evresult #ev_score{font-size:22px;color:var(--brand1)}
+  .evresult #ev_reco{font-size:20px;color:#B84E0F}
 
   /* 평가기간 셀렉트: 라벨이 길어져(2026 사전/정식 평가) 끝 글자가 잘려서 최소 폭 확보 */
   .header-tools select.per{min-width:155px;padding-right:38px}
@@ -621,13 +655,43 @@
       </div>
 
       <div style="height:18px"></div>
-      <div class="sec-eyebrow">핵심 성과<span class="lim">1,000자 이내</span></div>
-      <p class="hint" style="margin:-4px 0 12px">이번 기간의 핵심 성과를 자유롭게 서술하세요. 무엇을 했는지 · 수치(정량지표) · 본인의 기여를 함께 담으면 좋습니다.</p>
+      <div class="sec-eyebrow">핵심 성과<span class="lim">1,000자 이내</span><span class="help v2only" data-guide="core"></span></div>
+      <p class="hint" style="margin:-4px 0 12px">이번 기간의 핵심 성과를 자유롭게 서술하세요. 무엇을 했는지 · 수치(정량지표) · 본인의 기여를 함께 담으면 좋습니다. <span class="v2only">협업으로 낸 성과도 포함됩니다.</span></p>
       <div class="field full">
         <textarea class="tx" id="ap_core" placeholder="예: 6월 프로모션 단가검증 자동화로 오류 0건 달성 — 기존 수작업 대비 검토시간 3일→2시간 단축, 담당 100%"></textarea>
       </div>
 
-      <div class="grid" style="margin-top:6px">
+      <!-- ===== 2026 정식평가(H2) 전용 항목 ===== -->
+      <div id="ap_v2" class="hidden">
+        <div style="height:22px"></div>
+        <div class="sec-eyebrow">역량<span class="lim">최대 3개</span><span class="help" data-guide="comp"></span></div>
+        <p class="hint" style="margin:-4px 0 12px">목표를 이루는 과정에서 발휘한 본인의 역량을 직접 적고, 그 역량을 보여준 사례를 작성하세요. 다른 직원·부서와의 협업·소통 역량도 여기에 적을 수 있습니다.</p>
+        <div id="ap_comp_list"></div>
+        <button class="btn addbtn" id="ap_comp_add" type="button">+ 역량 추가</button>
+
+        <div style="height:22px"></div>
+        <div class="sec-eyebrow">돌아보기 및 개선<span class="help" data-guide="review"></span></div>
+        <p class="hint" style="margin:-4px 0 12px">아쉬웠던 점을 돌아보고, 무엇을 했거나 할 것인지, 그리고 다음 기간 목표를 적어 주세요.</p>
+        <div class="grid">
+          <div class="field"><label class="lb">아쉬웠던 점<span class="lim">300자 이내</span></label>
+            <textarea class="tx sm" id="rv_miss" placeholder="예: 생산 클레임 1건 발생. 작업자 확인 절차가 사람마다 달랐음"></textarea></div>
+          <div class="field"><label class="lb">원인 · 배운 점<span class="lim">300자 이내</span></label>
+            <textarea class="tx sm" id="rv_cause" placeholder="예: 점검 기준이 문서로 없어 숙련도 차이가 품질 차이로 이어짐"></textarea></div>
+          <div class="field full"><label class="lb">조치<span class="lim">500자 이내</span></label>
+            <div class="actchips" id="rv_act_type"><button type="button" class="actchip on" data-v="이미 조치함">이미 조치함</button><button type="button" class="actchip" data-v="앞으로 조치">앞으로 조치</button></div>
+            <textarea class="tx sm" id="rv_act" placeholder="예: 9월부터 공정별 체크리스트를 도입해 교대 시 확인하도록 함. 이후 동일 유형 클레임 0건"></textarea></div>
+          <div class="field full"><label class="lb">향후 목표<span class="lim">500자 이내</span></label>
+            <textarea class="tx sm" id="rv_goal" placeholder="예: 라인 가동률 92% → 95%, 원부자재 로스율 5% 절감"></textarea></div>
+        </div>
+
+        <div class="leaderbox hidden" id="ap_org_box">
+          <div class="sec-eyebrow">조직성과 <span class="leadertag">팀장 전용</span><span class="help" data-guide="org"></span></div>
+          <p class="hint" style="margin:-4px 0 12px">팀 단위 핵심과제(KPI) 달성률, 정책 소통, 조직 혁신 기여를 적어 주세요. 2차 평가자(임원)가 팀 단위로 평가합니다.</p>
+          <textarea class="tx" id="ap_org" placeholder="예: 팀 KPI : 생산 클레임 2건 이하 → 1건 (달성) / 인당 생산량 +10% → +12% (120%)&#10;정책 소통 : 4조 2교대 전환 취지를 팀원 면담으로 설명하고 근무표를 함께 확정&#10;조직 혁신 : 다공정 숙지자 양성 제도화"></textarea>
+        </div>
+      </div>
+
+      <div class="grid" id="ap_v1" style="margin-top:6px">
         <div class="field full">
           <label class="lb">협업 · 조직 기여<span class="lim">500자 이내</span></label>
           <textarea class="tx" id="ap_collab" placeholder="부서 간 협업, 업무 개선·자동화, 후배 지원 등"></textarea>
@@ -672,6 +736,16 @@
       <div class="sec-eyebrow">피평가자 어필 내용</div>
       <div class="ro" id="ev_appeal"><span class="hint">해당 피평가자의 어필 제출 내역이 없습니다.</span></div>
       <div id="ev_prev"></div>
+
+      <!-- ===== 2026 정식평가(H2) 항목별 평가 ===== -->
+      <div id="ev_items_section" class="hidden">
+        <div style="height:18px"></div>
+        <div class="sec-eyebrow">항목별 평가 <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">어필시트 항목과 별개로, 평가 기간의 업무 전반을 평가합니다</span></div>
+        <table class="evitems"><thead><tr><th style="width:36%">평가 항목</th><th>가중치</th><th>등급</th><th style="width:34%">근거 (선택)</th></tr></thead><tbody id="ev_items"></tbody></table>
+        <div class="evresult"><div>환산 점수<br><b id="ev_score">-</b> <span class="hint">/ 3.00</span></div>
+          <div class="hint" style="line-height:1.6">A=3 · B=2 · C=1 × 가중치<br>항목을 모두 고르면 아래 등급이 자동 선택됩니다. 팀 예산 게이지를 보고 조정할 수 있습니다.</div>
+          <div style="margin-left:auto">추천 등급 <b id="ev_reco">-</b></div></div>
+      </div>
 
       <div id="ev_grade_section">
         <div style="height:18px"></div>
@@ -1023,6 +1097,7 @@ function renderEvalLock(){
     if(stamp)stamp.textContent='열람 전용 · '+(rec?(rec.status==='제출완료'?'제출완료: '+fmtKstLong(rec.submittedAt):'작성중'):'미작성');
     const c=document.getElementById('ev_comment');if(c)c.readOnly=true;
     document.querySelectorAll('input[name=grade]').forEach(i=>i.disabled=true);
+    lockItems();
     return;
   }
   if(!(rec&&rec.status==='제출완료'))return;
@@ -1031,6 +1106,7 @@ function renderEvalLock(){
   setBtnLock('ev_submit',true,'이미 제출된 평가입니다');
   const c=document.getElementById('ev_comment');if(c)c.readOnly=true;
   document.querySelectorAll('input[name=grade]').forEach(i=>i.disabled=true);
+  lockItems();
 }
 
 async function acquireToken(account){
@@ -1140,7 +1216,7 @@ async function loadAllFromSharePoint(token){
     spId:it.id,period:f.Title||'',targetEmail:(f.field_1||'').toLowerCase(),empName:f.field_2||'',
     empTeam:f.field_3||'',evaluatorEmail:(f.field_4||'').toLowerCase(),evaluatorName:f.field_5||'',
     evalStage:f.field_6||'',grade:f.field_7||'',factor:Number(f.field_8)||1,
-    comment:f.field_9||'',status:f.field_10||'',submittedAt:f.field_11||''
+    comment:f.field_9||'',status:f.field_10||'',submittedAt:f.field_11||'',itemEval:f.ItemEval||''
   };}).filter(x=>x.targetEmail&&x.targetEmail!=='example@ymfood.com');
 
   const settingItems=await fetchAllItems(token,siteId,lists['설정']);
@@ -1262,6 +1338,122 @@ document.getElementById('ap_name').addEventListener('change',renderAppealIdentit
 function coreVal(){const el=document.getElementById('ap_core');return el?el.value.trim():'';}
 function g(id){return document.getElementById(id).value.trim();}
 
+/* ================= 2026 정식평가(H2) 어필시트 =================
+   SharePoint '어필시트'의 기존 칸을 그대로 쓰되, H2에서는 내용 구조가 다르다.
+   field_5 핵심성과 = 자유서술 / field_6(협업기여) = 역량·조직성과 JSON / field_7(도전개선) = 돌아보기 JSON / field_8(차기목표) = 향후 목표 */
+function isV2(p){return (p||period())==='2026-H2';}
+/* 작성 가이드 (사진 1장 + 문단 1개) — img에 이미지 주소를 넣으면 사진이 표시됨 */
+const GUIDE={
+  core:{title:'핵심 성과 작성 가이드',img:'',text:'무엇을 했는지보다 "무엇이 달라졌는지"를 적어 주세요. 매출액·생산량·비용 절감액·처리 건수·오류율처럼 숫자로 보여줄 수 있으면 함께 적고, 여러 사람이 함께한 일이라면 본인이 맡은 부분과 기여도(%)를 밝혀 주세요.'},
+  comp:{title:'역량 작성 가이드',img:'',text:'책임감, 주도성, 문제 해결력, 소통·협업처럼 본인이 이번 기간에 가장 잘 발휘했다고 생각하는 역량을 단어로 적고, 그 역량이 드러난 실제 사례를 1~2개 적어 주세요. "언제, 어떤 상황에서, 내가 무엇을 했고, 결과가 어땠는지" 순서로 쓰면 좋습니다.'},
+  review:{title:'돌아보기 및 개선 작성 가이드',img:'',text:'잘못을 찾는 칸이 아니라 스스로 돌아보고 다음 행동을 정하는 칸입니다. 아쉬웠던 점과 그 원인을 솔직하게 적고, 이미 고친 것이 있다면 "이미 조치함", 앞으로 할 계획이라면 "앞으로 조치"를 고른 뒤 내용을 적어 주세요. 다음 기간 목표는 가능하면 숫자로 적어 주세요.'},
+  org:{title:'조직성과 작성 가이드 (팀장)',img:'',text:'팀이 올해 맡은 핵심과제(KPI)와 목표 대비 실적·달성률을 적고, 회사 방침을 팀에 어떻게 전달·실행했는지(정책 소통), 팀 차원에서 바꾼 제도나 일하는 방식(조직 혁신)을 적어 주세요.'}
+};
+document.querySelectorAll('.help').forEach(h=>{
+  const gd=GUIDE[h.dataset.guide];if(!gd)return;
+  h.setAttribute('tabindex','0');
+  h.innerHTML=`<span class="q">?</span><div class="tip"><div class="ph">${gd.img?`<img src="${gd.img}" alt="">`:'가이드 이미지 자리'}</div><h4>${gd.title}</h4><p>${gd.text}</p></div>`;
+});
+function parseJ(s){try{const o=JSON.parse(s||'');return (o&&typeof o==='object')?o:null;}catch(e){return null;}}
+function bindCnt(t,max){
+  let c=t.nextElementSibling;if(!c||!c.classList.contains('cnt')){c=document.createElement('div');c.className='cnt';t.insertAdjacentElement('afterend',c);}
+  const f=()=>{const n=[...(t.value||'')].length;c.textContent=`(${n.toLocaleString()} / ${max.toLocaleString()}자)`;c.classList.toggle('over',n>max);};
+  t.addEventListener('input',f);t._cnt=f;f();
+}
+function addComp(name='',ex=''){
+  const list=document.getElementById('ap_comp_list');if(list.children.length>=3)return;
+  const d=document.createElement('div');d.className='compitem';
+  d.innerHTML=`<div class="row"><input class="tx" type="text" maxlength="30" placeholder="역량 (예: 책임감, 문제 해결력, 소통)"><button type="button" class="del">삭제</button></div>
+   <label class="lb" style="margin-top:10px">사례<span class="lim">500자 이내</span></label><textarea class="tx sm" placeholder="예: 납기 지연 위험이 있을 때 먼저 일정을 다시 짜고 관련 부서에 공유해 출고 차질을 막음"></textarea>`;
+  d.querySelector('input').value=name;d.querySelector('textarea').value=ex;
+  d.querySelector('.del').onclick=()=>{d.remove();syncCompBtn();};
+  list.appendChild(d);bindCnt(d.querySelector('textarea'),500);syncCompBtn();
+}
+function syncCompBtn(){const n=document.getElementById('ap_comp_list').children.length;const b=document.getElementById('ap_comp_add');
+  b.disabled=n>=3;b.textContent=n>=3?'최대 3개까지 입력할 수 있습니다':'+ 역량 추가';}
+document.getElementById('ap_comp_add').addEventListener('click',()=>addComp());
+document.querySelectorAll('#rv_act_type .actchip').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('#rv_act_type .actchip').forEach(x=>x.classList.toggle('on',x===c));}));
+[['rv_miss',300],['rv_cause',300],['rv_act',500],['rv_goal',500],['ap_org',1000]].forEach(([id,m])=>bindCnt(document.getElementById(id),m));
+function applyAppealPeriodUI(){
+  const v2=isV2();
+  document.getElementById('ap_v2').classList.toggle('hidden',!v2);
+  document.getElementById('ap_v1').classList.toggle('hidden',v2);
+  document.querySelectorAll('.v2only').forEach(e=>e.classList.toggle('hidden',!v2));
+  const me=currentUser&&currentUser.me;
+  document.getElementById('ap_org_box').classList.toggle('hidden',!(v2&&me&&me.teamLead));
+}
+function v2Collect(){
+  const comps=[...document.querySelectorAll('#ap_comp_list .compitem')].map(d=>({name:d.querySelector('input').value.trim(),ex:d.querySelector('textarea').value.trim()})).filter(c=>c.name||c.ex);
+  const actType=document.querySelector('#rv_act_type .actchip.on')?.dataset.v||'이미 조치함';
+  return{
+    collab:JSON.stringify({v:2,comps,org:g('ap_org')}),
+    challenge:JSON.stringify({v:2,miss:g('rv_miss'),cause:g('rv_cause'),actType,act:g('rv_act')}),
+    goal:g('rv_goal')
+  };
+}
+function v2Fill(a){
+  const c=parseJ(a&&a.collab)||{},r=parseJ(a&&a.challenge)||{};
+  const list=document.getElementById('ap_comp_list');list.innerHTML='';
+  (c.comps&&c.comps.length?c.comps:[{name:'',ex:''}]).forEach(x=>addComp(x.name||'',x.ex||''));
+  document.getElementById('ap_org').value=c.org||'';
+  document.getElementById('rv_miss').value=r.miss||'';
+  document.getElementById('rv_cause').value=r.cause||'';
+  document.getElementById('rv_act').value=r.act||'';
+  const at=r.actType||'이미 조치함';
+  document.querySelectorAll('#rv_act_type .actchip').forEach(x=>x.classList.toggle('on',x.dataset.v===at));
+  document.getElementById('rv_goal').value=(a&&a.goal)||'';
+  ['rv_miss','rv_cause','rv_act','rv_goal','ap_org'].forEach(id=>{const t=document.getElementById(id);t._cnt&&t._cnt();});
+}
+/* 평가자 화면용 어필 표시 (H1/H2 공통) */
+function appealHtml(ap){
+  if(!isV2(ap.period))return kv('핵심성과',ap.core)+kv('협업·조직기여',ap.collab)+kv('도전·개선',ap.challenge)+kv('차기목표',ap.goal);
+  const c=parseJ(ap.collab)||{},r=parseJ(ap.challenge)||{};
+  const comps=(c.comps||[]).map(x=>`· ${esc(x.name)}${x.ex?' — '+esc(x.ex):''}`).join('\n');
+  const rv=[r.miss&&'아쉬웠던 점: '+r.miss,r.cause&&'원인·배운 점: '+r.cause,r.act&&`조치(${r.actType||''}): `+r.act].filter(Boolean).join('\n');
+  return kv('핵심 성과',ap.core)+(comps?`<div class="kv"><b>역량</b><span style="white-space:pre-wrap">${comps}</span></div>`:'')
+    +kv('돌아보기 및 개선',rv)+kv('향후 목표',ap.goal)+kv('조직성과 (팀장)',c.org||'');
+}
+
+/* ================= 2026 정식평가(H2) 평가자 항목별 평가 ================= */
+const EV_ITEMS=[
+  {k:'perf',name:'업무 성과',w:35,d:'목표 달성도, 결과물의 양과 수준, 회사 기여도'},
+  {k:'att', name:'업무 태도',w:25,d:'성실성, 책임감, 근태, 지시·약속 이행, 협조성'},
+  {k:'acc', name:'업무 정확성',w:15,d:'실수·오류·재작업·클레임 빈도, 마감 준수'},
+  {k:'comp',name:'직무 역량',w:15,d:'업무 지식, 문제 해결력, 추진력, 소통 능력'},
+  {k:'pot', name:'발전 가능성',w:10,d:'학습·개선 의지, 더 큰 역할을 맡을 잠재력'}
+];
+const ITEM_SC={A:3,B:2,C:1};
+document.getElementById('ev_items').innerHTML=EV_ITEMS.map(it=>`<tr data-k="${it.k}">
+  <td><b>${it.name}</b><small>${it.d}</small></td><td class="w">${it.w}%</td>
+  <td><div class="igr">${['A','B','C'].map(x=>`<button type="button" data-g="${x}">${x}</button>`).join('')}</div></td>
+  <td><input class="tx" type="text" maxlength="100" placeholder="이 등급을 준 이유 (한 줄)"></td></tr>`).join('');
+document.querySelectorAll('#ev_items .igr').forEach(gr=>gr.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+  if(b.disabled)return;gr.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));calcItems(true);})));
+function itemState(){
+  const rows=[...document.querySelectorAll('#ev_items tr')];
+  const out={v:1,items:rows.map(tr=>({k:tr.dataset.k,g:tr.querySelector('.igr button.on')?.dataset.g||'',r:tr.querySelector('input').value.trim()}))};
+  const done=out.items.every(x=>x.g);
+  out.score=done?Math.round(EV_ITEMS.reduce((a,it,i)=>a+ITEM_SC[out.items[i].g]*it.w/100,0)*100)/100:null;
+  out.reco=done?(out.score>=2.5?'A':(out.score>=1.8?'B':'C')):'';
+  return out;
+}
+function calcItems(applyGrade){
+  const s=itemState();
+  document.getElementById('ev_score').textContent=s.score==null?'-':s.score.toFixed(2);
+  document.getElementById('ev_reco').textContent=s.reco||'-';
+  if(applyGrade&&s.reco){const r=document.querySelector(`input[name=grade][value="${s.reco}"]`);if(r&&!r.disabled){r.checked=true;renderGauge();}}
+  return s;
+}
+function fillItems(json){
+  const o=parseJ(json)||{};const m={};(o.items||[]).forEach(x=>m[x.k]=x);
+  document.querySelectorAll('#ev_items tr').forEach(tr=>{const x=m[tr.dataset.k]||{};
+    tr.querySelectorAll('.igr button').forEach(b=>{b.classList.toggle('on',b.dataset.g===x.g);b.disabled=false;});
+    const inp=tr.querySelector('input');inp.value=x.r||'';inp.readOnly=false;});
+  calcItems(false);
+}
+function lockItems(){document.querySelectorAll('#ev_items .igr button').forEach(b=>b.disabled=true);document.querySelectorAll('#ev_items input').forEach(i=>i.readOnly=true);}
+
 /* 통일 payload(평면 JSON) — 어필/평가 공통 스키마 */
 function basePayload(kind,r){
   return{period:period(),kind,empName:r.name,empTeam:r.team,empRank:r.rank,
@@ -1271,12 +1463,15 @@ function basePayload(kind,r){
 function appealPayload(){const r=emp(apName());if(!r)return null;
   const p=basePayload('appeal',r);
   p.core=coreVal();
-  p.collab=g('ap_collab');p.challenge=g('ap_challenge');p.goal=g('ap_goal');
+  if(isV2()){Object.assign(p,v2Collect());}
+  else{p.collab=g('ap_collab');p.challenge=g('ap_challenge');p.goal=g('ap_goal');}
   p.evaluator=r.e1||'';p.evalStage='-';
   return p;
 }
 function loadAppealDraft(name){
   const a=APPEALS.find(x=>x.period===period()&&x.targetEmail===myEmail);
+  applyAppealPeriodUI();
+  if(isV2()){v2Fill(a);document.getElementById('ap_core').value=a?.core||'';renderAppealStamp();return;}
   document.getElementById('ap_collab').value=a?.collab||'';
   document.getElementById('ap_challenge').value=a?.challenge||'';
   document.getElementById('ap_goal').value=a?.goal||'';
@@ -1374,6 +1569,7 @@ function applyEvalPeriodVisibility(){
   document.getElementById('ev_grade_section').classList.toggle('hidden',!graded);
   document.getElementById('ev_grade_hidden_note').classList.toggle('hidden',graded);
   document.getElementById('ev_gauge_section').classList.toggle('hidden',!graded);
+  document.getElementById('ev_items_section').classList.toggle('hidden',!isV2());
 }
 function applyGradeRules(){
   const evaluator=document.getElementById('ev_evaluator').value;
@@ -1399,8 +1595,7 @@ document.getElementById('ev_target').addEventListener('change',e=>{
   // 어필 표시
   const ap=LOG.filter(x=>x.kind==='appeal'&&x.empName===name&&x.period===period()).slice(-1)[0];
   const box=document.getElementById('ev_appeal');
-  if(ap){box.innerHTML=kv('핵심성과',ap.core)
-    +kv('협업·조직기여',ap.collab)+kv('도전·개선',ap.challenge)+kv('차기목표',ap.goal);}
+  if(ap){box.innerHTML=appealHtml(ap);}
   else box.innerHTML='<span class="hint">해당 피평가자의 어필 제출 내역이 없습니다. (구두 확인 후 평가 가능)</span>';
   // 사전 평가 기록 참조
   const prev=prevPeriod(period());const pv=document.getElementById('ev_prev');pv.innerHTML='';
@@ -1415,6 +1610,7 @@ document.getElementById('ev_target').addEventListener('change',e=>{
   updateCharCounts();
   document.querySelectorAll('input[name=grade]').forEach(i=>i.disabled=false);
   applyEvalPeriodVisibility();
+  if(isV2()){const rec=myEvalRec(name);fillItems(rec&&rec.itemEval);}
   applyGradeRules();
   renderGauge();
   refreshWindowUI();
@@ -1463,6 +1659,7 @@ function evalPayload(){const evaluator=document.getElementById('ev_evaluator').v
   const stage=stageChain(r).find(([k])=>r[k]===evaluator)?.[1]||'1차';
   const p=basePayload('eval',r);
   p.evaluator=evaluator;p.evalStage=stage;p.grade=grade;p.factor=grade?FACTOR[grade]:1;p.comment=g('ev_comment');
+  p.itemEval=isV2()?JSON.stringify(itemState()):'';
   return p;
 }
 document.getElementById('ev_save').addEventListener('click',async()=>{if(VIEW_ONLY)return toast('관리자 열람 모드입니다','warn');if(!guardWindow('eval'))return;
@@ -1476,6 +1673,7 @@ document.getElementById('ev_submit').addEventListener('click',async()=>{
   if(VIEW_ONLY)return toast('관리자 열람 모드입니다','warn');
   if(!guardWindow('eval'))return;
   const p=evalPayload();if(!p.empName)return toast('피평가자를 선택하세요','warn');
+  if(isV2()&&!itemState().reco)return toast('항목별 평가의 등급을 모두 선택하세요','warn');
   if(!p.comment)return toast('피드백 코멘트를 입력하세요','warn');
   if(isEvalSubmitted(p.empName))return toast('이미 제출된 평가입니다','warn');
   if(!guardGrade(p))return;
@@ -1533,11 +1731,12 @@ async function upsertEval(p,status){
   const fields={Title:p.period,field_1:targetEmail,field_2:p.empName,field_3:p.empTeam,
     field_4:myEmail,field_5:varName,field_6:p.evalStage,field_7:p.grade,field_8:p.factor,
     field_9:p.comment,field_10:status,field_11:submittedAt};
+  if(isV2(p.period))fields.ItemEval=p.itemEval||'';   // 정식평가 항목별 평가(JSON) — '평가기록' 리스트의 ItemEval 열
   const existing=EVALS.find(x=>x.period===p.period&&x.targetEmail===targetEmail&&x.evaluatorEmail===myEmail);
   if(existing){await updateItem(GS.token,GS.siteId,GS.lists['평가기록'],existing.spId,fields);
-    Object.assign(existing,{empName:p.empName,empTeam:p.empTeam,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,status,submittedAt});}
+    Object.assign(existing,{empName:p.empName,empTeam:p.empTeam,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,itemEval:p.itemEval||'',status,submittedAt});}
   else{const res=await createItem(GS.token,GS.siteId,GS.lists['평가기록'],fields);
-    EVALS.push({spId:res.id,period:p.period,targetEmail,empName:p.empName,empTeam:p.empTeam,evaluatorEmail:myEmail,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,status,submittedAt});}
+    EVALS.push({spId:res.id,period:p.period,targetEmail,empName:p.empName,empTeam:p.empTeam,evaluatorEmail:myEmail,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,itemEval:p.itemEval||'',status,submittedAt});}
   rebuildLog();
 }
 function rebuildLog(){
