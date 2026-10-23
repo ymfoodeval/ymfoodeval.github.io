@@ -482,6 +482,9 @@ table.evitems .w{font-weight:700;color:var(--brand2);white-space:nowrap}
   .grades{grid-template-columns:repeat(2,1fr)}
   .app-bar{flex-wrap:wrap}
 }
+/* 다크: 밝은 상태색(bad/warn/brand2) 위 글자는 --on-brand */
+:root[data-theme="dark"] .gauge.over .marker,:root[data-theme="dark"] .leadertag,:root[data-theme="dark"] .toast.warn,:root[data-theme="dark"] .toast.bad{color:var(--on-brand)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .gauge.over .marker,:root:not([data-theme="light"]) .leadertag,:root:not([data-theme="light"]) .toast.warn,:root:not([data-theme="light"]) .toast.bad{color:var(--on-brand)}}
 
 </style>
 </head>
