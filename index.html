@@ -517,6 +517,11 @@
   .help .q{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--brand1);color:var(--brand1);font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:help;background:rgba(255,255,255,.85)}
   .help .tip{display:none;position:absolute;top:26px;left:-14px;width:340px;background:#fff;color:#333;border:1px solid #F2B48A;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.18);padding:14px;z-index:50;font-weight:400}
   .help:hover .tip,.help:focus-within .tip{display:block}
+  /* 입력칸(backdrop-filter)이 툴팁을 덮지 않도록 쌓임 순서 고정 */
+  .sec-eyebrow{position:relative;z-index:20}
+  .sec-eyebrow:has(.help:hover),.sec-eyebrow:has(.help:focus-within){z-index:100}
+  #tab-appeal .field,#tab-appeal .compitem,#tab-appeal .grid{position:relative;z-index:1}
+  .help .tip{z-index:1000}
   .help .tip .ph{height:130px;border-radius:8px;background:repeating-linear-gradient(45deg,#fbe9dc,#fbe9dc 10px,#fdf3ec 10px,#fdf3ec 20px);display:flex;align-items:center;justify-content:center;color:#B84E0F;font-size:12px;margin-bottom:10px;overflow:hidden}
   .help .tip .ph img{width:100%;height:100%;object-fit:cover}
   .help .tip h4{margin:0 0 6px;font-size:13.5px;color:#B84E0F}
