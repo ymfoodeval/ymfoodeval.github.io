@@ -2042,6 +2042,7 @@ applyTheme(darkMode==='dark');
 
 /* ================= init ================= */
 (async function initAuth(){
+  if(new URLSearchParams(location.search).get('demo')==='1')return;   // 미리보기 데모: 실제 로그인 생략
   renderLoginDeadline();          // 직전 로그인 때 캐시해 둔 마감일을 우선 표시
   try{
     await msalReady;
