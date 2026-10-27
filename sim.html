@@ -943,7 +943,7 @@ const MSAL_CONFIG={
   auth:{
     clientId:'d3c74473-e387-4b90-88c7-fc057a6202f4',
     authority:'https://login.microsoftonline.com/180eeda6-9ee4-4b19-99ea-1c4c501384cc',
-    redirectUri:window.location.origin+window.location.pathname
+    redirectUri:window.location.origin+'/'   /* 시뮬레이션: 등록된 실제 사이트 주소로 로그인 */
   },
   cache:{cacheLocation:'sessionStorage',storeAuthStateInCookie:false}
 };
@@ -2588,8 +2588,12 @@ if(ST&&ST.lists&&ST.lists['명단']&&ST.lists['명단'].length)buildPeople();els
 function persist(){try{if(ST)localStorage.setItem(SIM_KEY,JSON.stringify(ST));}catch(e){}}
 
 async function loadRealRoster(){
-  await msalReady;let acc=msalInstance.getActiveAccount()||msalInstance.getAllAccounts()[0];
-  if(!acc){const r=await msalInstance.loginPopup(GRAPH_LOGIN_REQUEST);acc=r.account;}
+  await msalReady;
+  try{Object.keys(sessionStorage).filter(k=>k.includes('interaction.status')).forEach(k=>sessionStorage.removeItem(k));}catch(e){}
+  let acc=msalInstance.getActiveAccount()||msalInstance.getAllAccounts()[0];
+  if(!acc){ /* 팝업 대신 기존 Microsoft 세션으로 조용히 로그인 */
+    try{const r=await msalInstance.ssoSilent(GRAPH_LOGIN_REQUEST);acc=r.account;}
+    catch(e){throw new Error('Microsoft 로그인 정보가 없습니다. 아래 「실제 사이트에서 로그인」을 눌러 로그인한 뒤, 같은 탭에서 이 페이지로 돌아와 주세요.');}}
   msalInstance.setActiveAccount(acc);
   const block=graphGet;graphGet=REAL.graphGet;   // 명단 읽기 동안만 실제 GET 허용(읽기 전용)
   let ro,se,lists;
@@ -2664,7 +2668,7 @@ function openLoader(){
   m=document.createElement('div');m.id='simPicker';m.className='wmodal';
   m.innerHTML=`<div class="box" style="max-width:560px"><h3>시뮬레이션 준비 · 실제 명단 불러오기</h3>
     <div class="hint" style="line-height:1.7">실제 직원 이름·팀·직급·평가 경로로 테스트하기 위해 SharePoint '명단'을 <b>읽기만</b> 합니다. 이 페이지는 공개 주소라 실명을 파일에 넣지 않았고, 로그인한 사람만 불러올 수 있습니다.<br>불러온 명단과 시뮬레이션 입력은 이 브라우저에만 저장되고, 실제 SharePoint·메일에는 아무것도 쓰지 않습니다.</div>
-    <div class="acts"><button class="btn primary" id="simLoad">Microsoft 계정으로 명단 불러오기</button></div><div class="hint" id="simLoadMsg" style="margin-top:8px"></div></div>`;
+    <div class="acts"><a class="btn" href="./" id="simGoReal">실제 사이트에서 로그인</a><button class="btn primary" id="simLoad">Microsoft 계정으로 명단 불러오기</button></div><div class="hint" id="simLoadMsg" style="margin-top:8px"></div></div>`;
   document.body.appendChild(m);
   m.querySelector('#simLoad').onclick=async()=>{const msg=m.querySelector('#simLoadMsg');msg.textContent='불러오는 중...';
     try{await loadRealRoster();m.remove();renderPanel();openPicker();toast(`명단 ${PEOPLE.length}명을 불러왔습니다`);}
