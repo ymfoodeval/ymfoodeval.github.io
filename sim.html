@@ -318,6 +318,11 @@
   .ro .kv:last-child{border:0;margin-bottom:0;padding-bottom:0}
   .ro .kv b{color:var(--brand2);display:block;font-size:13px;margin-bottom:3px;font-weight:800}
   .ro .kv span{color:var(--ink-3);white-space:pre-wrap}
+  .cmbs{display:flex;flex-wrap:wrap;gap:6px}
+  .cmb{display:inline-flex;flex-direction:column;align-items:center;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--field);font-size:12px;font-weight:700;color:var(--ink)}
+  .cmb small{font-weight:400;color:var(--muted);font-size:11px}
+  .cmb.eq{border-color:var(--ok)}
+  .cmb.cur{background:var(--brand1);border-color:var(--brand1);color:#fff} .cmb.cur small{color:#fff}
   .fin-sum{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:4px 0 10px}
   .fin-sum div{background:var(--soft);border:1px solid var(--glass-edge);border-radius:12px;padding:10px 12px}
   .fin-sum b{display:block;font-size:20px;color:var(--brand2)} .fin-sum span{font-size:11.5px;color:var(--muted)}
@@ -499,6 +504,24 @@
   body.dark nav.tabs button:hover:not(.on){background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.16)}
   body.dark nav.tabs button.on{background:rgba(255,255,255,.14);border-color:rgba(255,160,80,.6);color:var(--brand2)}
 
+  .side-sticky{position:sticky;top:14px}
+  .ev-side{margin-top:18px;padding:12px 10px;border-radius:16px;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.7)}
+  body.dark .ev-side{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
+  .ev-side .h{font-size:12.5px;font-weight:800;color:var(--brand2);margin:2px 4px 8px}
+  .ev-side .h span{color:var(--muted);font-weight:700}
+  .ev-side .h+.p,.ev-side .p+.h{margin-top:0}
+  .ev-side .p+.h{margin-top:12px}
+  .ev-side .p{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;cursor:pointer;border:1px solid transparent}
+  .ev-side .p:hover{background:rgba(255,255,255,.5)}
+  body.dark .ev-side .p:hover{background:rgba(255,255,255,.08)}
+  .ev-side .p.sel{background:var(--gold-soft);border-color:var(--brand1)}
+  .ev-side .p b{display:block;font-size:13.5px;color:var(--ink-2)}
+  .ev-side .p small{display:block;font-size:11.5px;color:var(--muted)}
+  .ev-side .gc{margin-left:auto;min-width:26px;height:24px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;
+    border:1.5px solid var(--glass-edge);color:var(--muted);background:rgba(255,255,255,.4)}
+  .ev-side .gc.done{border-color:var(--brand1);color:var(--brand2);background:var(--gold-soft)}
+  .ev-side .gc.draft{border-style:dashed;border-color:var(--brand1);color:var(--brand2)}
+  .ev-side .leg{font-size:10.5px;color:var(--muted);margin:10px 4px 0;line-height:1.6}
   .side-note{margin-top:22px;padding:12px 13px;border-radius:14px;font-size:11.5px;line-height:1.6;
     color:var(--muted);background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.45)}
   body.dark .side-note{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
@@ -605,6 +628,7 @@
   @media(max-width:900px){
     .app-body{flex-direction:column}
     .side{width:auto;flex:none;border-right:none;border-bottom:1px solid rgba(255,255,255,.45)}
+    .side-sticky{position:static}
     nav.tabs{flex-direction:row;flex-wrap:wrap}
     nav.tabs button{width:auto}
     .main{padding:18px 16px 26px}
@@ -664,7 +688,7 @@
       <div class="dlbar hidden" id="appDeadline"></div>
 
       <div class="app-body">
-        <aside class="side">
+        <aside class="side"><div class="side-sticky">
           <div class="side-wrap">
             <div class="side-title">메뉴</div>
             <nav class="tabs" id="tabs">
@@ -675,11 +699,12 @@
               <button data-tab="set"><span class="dot"></span>설정</button>
             </nav>
           </div>
+          <div id="ev_side" class="ev-side hidden"></div>
           <div class="side-note">
             로그인한 계정의 권한에 따라 메뉴가 표시됩니다.<br />
             문의: 경영관리팀 · 강태욱
           </div>
-        </aside>
+        </div></aside>
 
         <main class="main">
   <!-- ============ 본인 어필시트 ============ -->
@@ -1323,7 +1348,7 @@ function allowedTabs(){
   if(!currentUser)return[];
   const t=[];
   if(currentUser.isTarget)t.push('appeal');
-  if(currentUser.isEvaluator||currentUser.isCEO||currentUser.isAdmin)t.push('eval');
+  if((currentUser.isEvaluator&&!currentUser.isCEO)||currentUser.isAdmin)t.push('eval');   // 대표이사는 평가 입력 없음(최종 확정 탭 사용)
   if(currentUser.isCEO||currentUser.isAdmin)t.push('agg');
   if(currentUser.isCEO||currentUser.isAdmin)t.push('final');
   if(currentUser.isAdmin)t.push('set');
@@ -1372,6 +1397,7 @@ document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.cl
   document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
   ['appeal','eval','agg','final','set'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
   if(b.dataset.tab==='final')renderFinal();
+  renderEvalSide();
   if(b.dataset.tab==='agg')renderAgg();
   if(b.dataset.tab==='eval'){applyWeightGate();if(weightsRequired()&&!myWeights())openWeightModal();}
 });
@@ -1742,8 +1768,31 @@ document.getElementById('ev_target').addEventListener('change',e=>{
   applyGradeRules();
   renderGauge();
   refreshWindowUI();
+  renderEvalSide();
 });
 function kv(t,v){return v?`<div class="kv"><b>${t}</b><span>${esc(v)}</span></div>`:'';}
+/* ================= 왼쪽: 내가 평가할 사람과 등급 (평가자 입력 탭) ================= */
+function evRecBy(evName,r){return EVALS.filter(x=>x.period===period()&&x.targetEmail===r.email&&x.evaluatorName===evName).slice(-1)[0]||null;}
+function renderEvalSide(){
+  const box=document.getElementById('ev_side');if(!box)return;
+  const onEval=!document.getElementById('tab-eval').classList.contains('hidden');
+  const evName=document.getElementById('ev_evaluator').value;
+  const list=onEval&&evName?targetsOf(evName):[];
+  if(!list.length){box.classList.add('hidden');box.innerHTML='';return;}
+  const cur=document.getElementById('ev_target').value;
+  const groups={};list.forEach(o=>{(groups[o.stage]=groups[o.stage]||[]).push(o.r);});
+  let h='';
+  Object.entries(groups).forEach(([stage,rs])=>{
+    const done=rs.filter(r=>{const x=evRecBy(evName,r);return x&&x.status==='제출완료';}).length;
+    h+=`<div class="h">${stage==='팀 평가'?'팀 평가할 팀장':stage+'로 평가할 사람'} <span>(${done}/${rs.length} 제출)</span></div>`;
+    rs.forEach(r=>{const x=evRecBy(evName,r);const sub=x&&x.status==='제출완료';
+      h+=`<div class="p ${r.name===cur?'sel':''}" data-n="${esc(r.name)}"><div><b>${esc(r.name)}</b><small>${esc(r.team)} · ${esc(r.rank)}</small></div>
+        <span class="gc ${sub?'done':x&&x.grade?'draft':''}" title="${sub?'제출됨':x?'작성 중':'미작성'}">${x&&x.grade?x.grade:'-'}</span></div>`;});
+  });
+  h+=`<div class="leg">오른쪽 칸 = 내가 준 등급<br>주황 = 제출됨 · 점선 = 작성 중 · 테두리 = 지금 보는 사람</div>`;
+  box.innerHTML=h;box.classList.remove('hidden');
+  box.querySelectorAll('.p').forEach(d=>d.onclick=()=>{const t=document.getElementById('ev_target');t.value=d.dataset.n;t.dispatchEvent(new Event('change',{bubbles:true}));window.scrollTo({top:0,behavior:'smooth'});});
+}
 /* ================= 평가자별 가중치 (정식평가) =================
    평가자가 평가 시작 전에 한 번 정하고 저장 → 이후 수정 불가. 그 평가자가 평가하는 모든 사람에게 같은 가중치 적용.
    저장 위치: '평가기록' 리스트, 평가단계(field_6)='가중치', 피평가자 이메일=평가자 본인, ItemEval=JSON. 결과 메일 일괄 발송 때 이 행은 제외할 것. */
@@ -1756,6 +1805,7 @@ function mySets(){const list=targetsOf(varName);return{indiv:list.some(o=>!isTea
 function weightsRequired(){return isV2()&&!!currentUser&&currentUser.isEvaluator&&!VIEW_ONLY&&targetsOf(varName).length>0;}
 function wSummary(wo,setName,base){return base.map(it=>`${it.name} ${wo[setName][it.k]}`).join(' · ');}
 function applyWeightGate(){
+  setTimeout(renderEvalSide,0);
   const bar=document.getElementById('ev_weight_bar');const tsel=document.getElementById('ev_target');if(!bar)return;
   if(!isV2()){bar.classList.add('hidden');tsel.disabled=false;return;}
   if(VIEW_ONLY){const n=document.getElementById('ev_evaluator').value;const wo=n&&weightsOf(n);
@@ -1941,7 +1991,7 @@ async function upsertEval(p,status){
     Object.assign(existing,{empName:p.empName,empTeam:p.empTeam,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,itemEval:p.itemEval||'',status,submittedAt});}
   else{const res=await createItem(GS.token,GS.siteId,GS.lists['평가기록'],fields);
     EVALS.push({spId:res.id,period:p.period,targetEmail,empName:p.empName,empTeam:p.empTeam,evaluatorEmail:myEmail,evaluatorName:varName,evalStage:p.evalStage,grade:p.grade,factor:p.factor,comment:p.comment,itemEval:p.itemEval||'',status,submittedAt});}
-  rebuildLog();
+  rebuildLog();renderEvalSide();
 }
 function rebuildLog(){
   LOG=[
@@ -2073,7 +2123,8 @@ function renderFinal(){
   box.innerHTML=`${currentUser&&!currentUser.isCEO?'<div class="fin-note">관리자 계정입니다. 저장·확정하면 입력자(관리자)가 함께 기록됩니다. 실제 결정은 대표이사가 하도록 해 주세요.</div>':''}
     <div class="fin-sum"><div><b>${ev.length}</b><span>평가 대상</span></div><div><b>${ev.length-pendM-pendL}/${ev.length}</b><span>평가 제출</span></div><div><b>${nFlag}</b><span>확인할 점</span></div><div><b>${nChg}</b><span>대표이사 조정</span></div><div><b>${FD.S.length}/${cap}</b><span>S (5% 이내)</span></div></div>
     <div class="fin-chips"><span class="hint">평가자별 팀 등급</span>${chips}</div>
-    <label class="hint" style="display:flex;gap:6px;align-items:center;margin:6px 0 4px"><input type="checkbox" id="fin_onlyex" ${FIN_ONLYEX?'checked':''}> 확인할 점·조정한 사람만 보기</label>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:6px 0 4px"><label class="hint" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="fin_onlyex" ${FIN_ONLYEX?'checked':''}> 확인할 점·조정한 사람만 보기</label>
+      <button class="btn" type="button" id="fin_combo" style="padding:7px 14px;font-size:12.5px">팀 가중평균 맞추는 경우의 수</button></div>
     <div class="hint">최종 칸에서 등급을 바꾸면 사유가 필요합니다. S는 팀원만(팀장은 A까지), 팀 가중평균 계산에서 빠집니다.</div>
     ${cards}
     <div class="fin-team"><b>최종 확정</b>
@@ -2093,10 +2144,34 @@ function renderFinal(){
   box.querySelectorAll('input[data-tr]').forEach(i=>i.onchange=()=>{FD.team[i.dataset.tr].reason=i.value;dirty();});
   box.querySelectorAll('input[data-over]').forEach(i=>i.onchange=()=>{FD.over[i.dataset.over]=i.value;dirty();});
   document.getElementById('fin_onlyex').onchange=e=>{FIN_ONLYEX=e.target.checked;keepFinScroll(renderFinal);};
+  document.getElementById('fin_combo').onclick=openComboModal;
   const sv=document.getElementById('fin_save');if(sv)sv.onclick=()=>finSave(false);
   const cf=document.getElementById('fin_confirm');if(cf)cf.onclick=()=>finSave(true);
   const uc=document.getElementById('fin_unconfirm');if(uc)uc.onclick=async()=>{if(!confirm('최종 확정을 취소할까요? 다시 등급을 조정할 수 있게 됩니다.'))return;
     try{await finUpsert('최종확정','confirm',{name:'최종 확정',team:'',grade:'',reason:'확정 취소',status:'취소'});toast('확정을 취소했습니다');renderFinal();}catch(e){toast('취소 실패: '+e.message,'bad');}};
+}
+/* 팀 가중평균 100% 이하가 되는 A·B·C 인원 조합 (지급률 A110·B100·C90 → 평균≤100% ⇔ A 인원 ≤ C 인원, S는 별도 재원이라 제외) */
+function openComboModal(){
+  document.querySelectorAll('.wmodal.combo').forEach(m=>m.remove());
+  const teams=finTeams().filter(T=>T.members.length);
+  const blocks=teams.map(T=>{
+    const fin=T.members.map(memberFinal);const nS=fin.filter(g=>g==='S').length;const n=T.members.length-nS;
+    const cur={A:fin.filter(g=>g==='A').length,B:fin.filter(g=>g==='B').length,C:fin.filter(g=>g==='C').length};
+    const curAvg=n?(cur.A*110+cur.B*100+cur.C*90)/n:null;
+    const combos=[];for(let a=0;a<=n;a++)for(let c=a;c<=n-a;c++){const b=n-a-c;combos.push({a,b,c,avg:(a*110+b*100+c*90)/n});}
+    combos.sort((x,y)=>y.a-x.a||x.c-y.c);
+    const chips=combos.map(o=>{const isCur=o.a===cur.A&&o.b===cur.B&&o.c===cur.C;
+      return `<span class="cmb ${isCur?'cur':''} ${o.a===o.c?'eq':''}">A ${o.a} · B ${o.b} · C ${o.c}<small>${o.avg.toFixed(1)}%</small></span>`;}).join('');
+    const ok=curAvg==null||curAvg<=100.0001;
+    return `<div class="wset"><h4>${esc(T.team)} <span class="hint" style="font-weight:400">· 팀원 ${n}명${nS?` (S ${nS}명 제외)`:''} · 지금 A ${cur.A} · B ${cur.B} · C ${cur.C} → <b style="color:${ok?'var(--ok)':'var(--bad)'}">${curAvg==null?'-':curAvg.toFixed(1)+'%'}</b></span></h4>
+      <div class="hint" style="margin-bottom:6px">A는 최대 ${Math.floor(n/2)}명까지 (그만큼 C가 있어야 함) · 가능한 조합 ${combos.length}가지</div><div class="cmbs">${chips||'<span class="hint">팀원 없음</span>'}</div></div>`;}).join('');
+  const m=document.createElement('div');m.className='wmodal combo';
+  m.innerHTML=`<div class="box" style="max-width:760px"><h3>팀 가중평균 맞추는 경우의 수</h3>
+    <div class="hint" style="line-height:1.7">지급률이 A 110% · B 100% · C 90%라서 <b>팀원 가중평균이 100% 이하가 되려면 A 인원이 C 인원보다 많으면 안 됩니다</b> (A ≤ C). S는 별도 재원이라 계산에서 빠집니다.<br>
+    <span class="cmb cur" style="pointer-events:none">지금 분포</span> <span class="cmb eq" style="pointer-events:none">정확히 100%</span> 아래 조합이 모두 가능한 분포입니다.</div>
+    ${blocks}<div class="acts"><button class="btn primary" type="button" id="combo_close">닫기</button></div></div>`;
+  document.body.appendChild(m);
+  m.querySelector('#combo_close').onclick=()=>m.remove();
 }
 function keepFinScroll(fn){const y=window.scrollY;fn();window.scrollTo(0,y);}
 function finTable(teams){
