@@ -317,6 +317,21 @@
   .ro .kv:last-child{border:0;margin-bottom:0;padding-bottom:0}
   .ro .kv b{color:var(--brand2);display:block;font-size:13px;margin-bottom:3px;font-weight:800}
   .ro .kv span{color:var(--ink-3);white-space:pre-wrap}
+  .wbar{margin-top:14px;padding:12px 14px;border-radius:12px;border:1px solid var(--gold-line);background:var(--gold-soft);font-size:13px;line-height:1.6}
+  .wbar.need{border-color:var(--bad);background:var(--bad-soft)}
+  .wbar b{color:var(--brand2)}
+  .wmodal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px}
+  .wmodal .box{background:var(--card);color:var(--ink);border-radius:16px;max-width:620px;width:100%;max-height:90vh;overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .wmodal h3{margin:0 0 6px;font-size:18px;color:var(--brand2)}
+  .wmodal .wset{margin-top:16px}
+  .wmodal .wset h4{margin:0 0 8px;font-size:14px}
+  .wmodal table{width:100%;border-collapse:collapse}
+  .wmodal td{padding:7px 4px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+  .wmodal td small{display:block;color:var(--muted);font-size:11.5px}
+  .wmodal input[type=number]{width:72px;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;text-align:right;background:var(--field);color:var(--ink)}
+  .wmodal .sum{margin-top:6px;text-align:right;font-weight:800}
+  .wmodal .sum.bad{color:var(--bad)} .wmodal .sum.ok{color:var(--ok)}
+  .wmodal .acts{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
   .prevbox{border-left:3px solid var(--gold-line);background:var(--gold-soft);
     border-radius:0 12px 12px 0;padding:12px 14px;margin-top:12px}
   .prevbox .h{font-size:13px;font-weight:800;color:var(--gold);letter-spacing:.04em;margin-bottom:8px}
@@ -740,6 +755,7 @@
           <select class="tx" id="ev_target"><option value="">— 먼저 평가자를 선택 —</option></select>
         </div>
       </div>
+      <div id="ev_weight_bar" class="wbar hidden"></div>
     </div>
 
     <div class="card hidden" id="ev_body">
@@ -1229,6 +1245,10 @@ async function loadAllFromSharePoint(token){
     evalStage:f.field_6||'',grade:f.field_7||'',factor:Number(f.field_8)||1,
     comment:f.field_9||'',status:f.field_10||'',submittedAt:f.field_11||'',itemEval:f.ItemEval||''
   };}).filter(x=>x.targetEmail&&x.targetEmail!=='example@ymfood.com');
+  /* 평가자별 가중치: '평가기록'에 평가단계='가중치' 행으로 저장(평가자 본인이 만든 행이라 본인만 읽음). 평가 목록에서는 제외 */
+  WEIGHTS={};
+  EVALS.filter(x=>x.evalStage==='가중치').forEach(x=>{const o=parseJ(x.itemEval);if(o)WEIGHTS[wKey(x.period,x.evaluatorEmail)]=Object.assign(o,{spId:x.spId,time:x.submittedAt});});
+  EVALS=EVALS.filter(x=>x.evalStage!=='가중치');
 
   const settingItems=await fetchAllItems(token,siteId,lists['설정']);
   SETTINGS={};settingItems.forEach(it=>{const f=it.fields||{};if(f.Title)SETTINGS[f.Title]=f.field_1||'';});
@@ -1284,6 +1304,7 @@ const CFG_DEFAULT={paurl:"",mailtag:"[영미산업 성과평가]"};
 let ROSTER=[];         // Microsoft Graph로 '명단' 리스트에서 로드
 let APPEALS=[];        // '어필시트' 리스트 캐시
 let EVALS=[];          // '평가기록' 리스트 캐시
+let WEIGHTS={};        // 평가자별 가중치 { '기간|이메일': {indiv:{k:w}, team:{k:w}, time} }
 let CFG=Object.assign({},CFG_DEFAULT);
 let LOG=[];            // APPEALS+EVALS를 화면용으로 합친 캐시 (rebuildLog()로 생성)
 let myEmail='';let varName='';let currentUser=null;
@@ -1311,8 +1332,9 @@ document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.cl
   document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
   ['appeal','eval','agg','set'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
   if(b.dataset.tab==='agg')renderAgg();
+  if(b.dataset.tab==='eval'){applyWeightGate();if(weightsRequired()&&!myWeights())openWeightModal();}
 });
-document.getElementById('period').addEventListener('change',()=>{fillNames();renderAppealIdentity();setEvaluatorIdentity();});
+document.getElementById('period').addEventListener('change',()=>{fillNames();renderAppealIdentity();setEvaluatorIdentity();});   // setEvaluatorIdentity 안에서 가중치 게이트 갱신
 
 /* ================= 어필시트 ================= */
 function fillNames(){const sel=document.getElementById('ap_name');const cur=sel.value;
@@ -1362,7 +1384,7 @@ const GUIDE={
   review:{title:"돌아보기 및 개선 작성 가이드",img:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMTIgMTUwIiB3aWR0aD0iMzEyIiBoZWlnaHQ9IjE1MCIgZm9udC1mYW1pbHk9IidNYWxndW4gR290aGljJywnQXBwbGUgU0QgR290aGljIE5lbycsJ05vdG8gU2FucyBLUicsc2Fucy1zZXJpZiI+PHJlY3Qgd2lkdGg9IjMxMiIgaGVpZ2h0PSIxNTAiIHJ4PSI4IiBmaWxsPSIjRkZGNkVGIi8+PHRleHQgeD0iMTQiIHk9IjIyIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjQjg0RTBGIiB0ZXh0LWFuY2hvcj0ic3RhcnQiPuuPjOyVhOuztOq4sCDrsI8g6rCc7ISgIMK3IDTri6jqs4TroZw8L3RleHQ+PHJlY3QgeD0iMTIiIHk9IjM0IiB3aWR0aD0iNjYiIGhlaWdodD0iODYiIHJ4PSI2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiNGMkM3QTUiLz48dGV4dCB4PSI0NSIgeT0iNTYiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iI0YwN0EyQSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+7JWE7Ims7Jq0IOygkDwvdGV4dD48dGV4dCB4PSI0NSIgeT0iODAiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjQwMCIgZmlsbD0iIzJiMmIyYiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+7YG066CI7J6EPC90ZXh0Pjx0ZXh0IHg9IjQ1IiB5PSI5NiIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjMmIyYjJiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4x6rG0PC90ZXh0PjxwYXRoIGQ9Ik04MCA3N2g4bS0zLTNsMyAzLTMgMyIgc3Ryb2tlPSIjRjA3QTJBIiBzdHJva2Utd2lkdGg9IjEuNiIgZmlsbD0ibm9uZSIvPjxyZWN0IHg9Ijg2IiB5PSIzNCIgd2lkdGg9IjY2IiBoZWlnaHQ9Ijg2IiByeD0iNiIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjRjJDN0E1Ii8+PHRleHQgeD0iMTE5IiB5PSI1NiIgZm9udC1zaXplPSIxMS41IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjRjA3QTJBIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7sm5Dsnbg8L3RleHQ+PHRleHQgeD0iMTE5IiB5PSI4MCIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjMmIyYjJiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7soJDqsoAg67Cp67KVPC90ZXh0Pjx0ZXh0IHg9IjExOSIgeT0iOTYiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjQwMCIgZmlsbD0iIzJiMmIyYiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+7KCc6rCB6rCBPC90ZXh0PjxwYXRoIGQ9Ik0xNTQgNzdoOG0tMy0zbDMgMy0zIDMiIHN0cm9rZT0iI0YwN0EyQSIgc3Ryb2tlLXdpZHRoPSIxLjYiIGZpbGw9Im5vbmUiLz48cmVjdCB4PSIxNjAiIHk9IjM0IiB3aWR0aD0iNjYiIGhlaWdodD0iODYiIHJ4PSI2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiNGMkM3QTUiLz48dGV4dCB4PSIxOTMiIHk9IjU2IiBmb250LXNpemU9IjExLjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiNGMDdBMkEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuyhsOy5mDwvdGV4dD48dGV4dCB4PSIxOTMiIHk9IjgwIiBmb250LXNpemU9IjEwLjUiIGZvbnQtd2VpZ2h0PSI0MDAiIGZpbGw9IiMyYjJiMmIiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuyytO2BrOumrOyKpO2KuDwvdGV4dD48dGV4dCB4PSIxOTMiIHk9Ijk2IiBmb250LXNpemU9IjEwLjUiIGZvbnQtd2VpZ2h0PSI0MDAiIGZpbGw9IiMyYjJiMmIiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuuPhOyehTwvdGV4dD48cGF0aCBkPSJNMjI4IDc3aDhtLTMtM2wzIDMtMyAzIiBzdHJva2U9IiNGMDdBMkEiIHN0cm9rZS13aWR0aD0iMS42IiBmaWxsPSJub25lIi8+PHJlY3QgeD0iMjM0IiB5PSIzNCIgd2lkdGg9IjY2IiBoZWlnaHQ9Ijg2IiByeD0iNiIgZmlsbD0iI0ZGRTdENCIgc3Ryb2tlPSIjRjJDN0E1Ii8+PHRleHQgeD0iMjY3IiB5PSI1NiIgZm9udC1zaXplPSIxMS41IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjRjA3QTJBIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7rqqntkZw8L3RleHQ+PHRleHQgeD0iMjY3IiB5PSI4MCIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjMmIyYjJiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7tgbTroIjsnoQ8L3RleHQ+PHRleHQgeD0iMjY3IiB5PSI5NiIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjMmIyYjJiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4w6rG0PC90ZXh0Pjx0ZXh0IHg9IjE0IiB5PSIxNDAiIGZvbnQtc2l6ZT0iMTAiIGZvbnQtd2VpZ2h0PSI0MDAiIGZpbGw9IiM4YThhOGEiIHRleHQtYW5jaG9yPSJzdGFydCI+7YOT7ZWY64qUIOy5uOydtCDslYTri4jrnbwg64uk7J2MIO2WieuPmeydhCDsoJXtlZjripQg7Lm4PC90ZXh0Pjwvc3ZnPg==',text:"잘못을 따지는 칸이 아니라, 다음에 더 잘하기 위한 칸입니다. 아쉬웠던 일 하나와 그 이유를 솔직하게 적고, 이미 고쳤으면 \"이미 조치함\", 앞으로 고칠 거면 \"앞으로 조치\"를 골라 주세요. 조치가 여러 개면 \"+ 조치 추가\"로 나눠 적고, 향후 목표는 숫자나 기한으로 적어 주세요.",ex:"예) 아쉬운 점: 클레임 1건 → 원인: 교대할 때 점검 방법이 사람마다 달랐음 → 조치(이미): 공정별 체크리스트 도입 → 목표: 내년 상반기 같은 유형 클레임 0건"},
   org:{title:"조직성과 작성 가이드 (팀장)",img:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMTIgMTUwIiB3aWR0aD0iMzEyIiBoZWlnaHQ9IjE1MCIgZm9udC1mYW1pbHk9IidNYWxndW4gR290aGljJywnQXBwbGUgU0QgR290aGljIE5lbycsJ05vdG8gU2FucyBLUicsc2Fucy1zZXJpZiI+PHJlY3Qgd2lkdGg9IjMxMiIgaGVpZ2h0PSIxNTAiIHJ4PSI4IiBmaWxsPSIjRkZGNkVGIi8+PHRleHQgeD0iMTQiIHk9IjIyIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjQjg0RTBGIiB0ZXh0LWFuY2hvcj0ic3RhcnQiPuyhsOyngeyEseqzvCAo7YyA7J6lKSDCtyDshLgg7Lm47Jy866GcIOuCmOuIoOyEnDwvdGV4dD48cmVjdCB4PSIxMiIgeT0iMzQiIHdpZHRoPSI5MiIgaGVpZ2h0PSIxMDAiIHJ4PSI2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiNGMkM3QTUiLz48cmVjdCB4PSIxMiIgeT0iMzQiIHdpZHRoPSI5MiIgaGVpZ2h0PSIyNiIgcng9IjYiIGZpbGw9IiNGMDdBMkEiLz48dGV4dCB4PSI1OCIgeT0iNTIiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuKRoCDtjIAgS1BJPC90ZXh0Pjx0ZXh0IHg9IjU4IiB5PSI4NiIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjMmIyYjJiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7tgbTroIjsnoQg4omkMuqxtDwvdGV4dD48dGV4dCB4PSI1OCIgeT0iMTA4IiBmb250LXNpemU9IjEwLjUiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMyYjJiMmIiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuKGkiAx6rG0IOuLrOyEsTwvdGV4dD48cmVjdCB4PSIxMTAiIHk9IjM0IiB3aWR0aD0iOTIiIGhlaWdodD0iMTAwIiByeD0iNiIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjRjJDN0E1Ii8+PHJlY3QgeD0iMTEwIiB5PSIzNCIgd2lkdGg9IjkyIiBoZWlnaHQ9IjI2IiByeD0iNiIgZmlsbD0iI0YwN0EyQSIvPjx0ZXh0IHg9IjE1NiIgeT0iNTIiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuKRoSDsoJXssYUg7IaM7Ya1PC90ZXh0Pjx0ZXh0IHg9IjE1NiIgeT0iODYiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjQwMCIgZmlsbD0iIzJiMmIyYiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Muq1kOuMgCDst6jsp4A8L3RleHQ+PHRleHQgeD0iMTU2IiB5PSIxMDgiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzJiMmIyYiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+MToxIOuptOuLtCDshKTrqoU8L3RleHQ+PHJlY3QgeD0iMjA4IiB5PSIzNCIgd2lkdGg9IjkyIiBoZWlnaHQ9IjEwMCIgcng9IjYiIGZpbGw9IiNmZmYiIHN0cm9rZT0iI0YyQzdBNSIvPjxyZWN0IHg9IjIwOCIgeT0iMzQiIHdpZHRoPSI5MiIgaGVpZ2h0PSIyNiIgcng9IjYiIGZpbGw9IiNGMDdBMkEiLz48dGV4dCB4PSIyNTQiIHk9IjUyIiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ikaIg7KGw7KeBIO2YgeyLoDwvdGV4dD48dGV4dCB4PSIyNTQiIHk9Ijg2IiBmb250LXNpemU9IjEwLjUiIGZvbnQtd2VpZ2h0PSI0MDAiIGZpbGw9IiMyYjJiMmIiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuuLpOqzteyglTwvdGV4dD48dGV4dCB4PSIyNTQiIHk9IjEwOCIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMmIyYjJiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7snpHsl4XsnpAg7JaR7ISxPC90ZXh0Pjwvc3ZnPg==',text:"팀 전체가 이번 기간에 이룬 것을 적어 주세요. ① 팀 목표(KPI)와 실제 결과, ② 회사 방침을 팀원에게 어떻게 전하고 실행했는지, ③ 팀에서 새로 만들거나 바꾼 일하는 방식, 이 세 가지를 나눠 쓰면 됩니다.",ex:"예) KPI: 클레임 2건 이하 목표 → 1건 (달성) / 정책 소통: 2교대 전환 취지를 1:1 면담으로 설명 / 혁신: 여러 공정을 다룰 수 있는 작업자 양성 제도화"},
   eval:{title:"평가자 입력 가이드",img:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMTIgMTUwIiB3aWR0aD0iMzEyIiBoZWlnaHQ9IjE1MCIgZm9udC1mYW1pbHk9IidNYWxndW4gR290aGljJywnQXBwbGUgU0QgR290aGljIE5lbycsJ05vdG8gU2FucyBLUicsc2Fucy1zZXJpZiI+PHJlY3Qgd2lkdGg9IjMxMiIgaGVpZ2h0PSIxNTAiIHJ4PSI4IiBmaWxsPSIjRkZGNkVGIi8+PHRleHQgeD0iMTQiIHk9IjIyIiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjQjg0RTBGIiB0ZXh0LWFuY2hvcj0ic3RhcnQiPu2PieqwgOyekCDsnoXroKUgwrcg67O4IOqyg+ydhCDqt7zqsbDroZw8L3RleHQ+PHRleHQgeD0iMTQiIHk9IjQ4IiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMmIyYjJiIiB0ZXh0LWFuY2hvcj0ic3RhcnQiPuyXheustCDshLHqs7w8L3RleHQ+PHJlY3QgeD0iNzQiIHk9IjMzIiB3aWR0aD0iMjQiIGhlaWdodD0iMjIiIHJ4PSI2IiBmaWxsPSIjRjA3QTJBIiBzdHJva2U9IiNGMDdBMkEiLz48dGV4dCB4PSI4NiIgeT0iNDguNSIgZm9udC1zaXplPSIxMSIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+QTwvdGV4dD48cmVjdCB4PSIxMDEiIHk9IjMzIiB3aWR0aD0iMjQiIGhlaWdodD0iMjIiIHJ4PSI2IiBmaWxsPSIjZmZmIiBzdHJva2U9IiNGMkM3QTUiLz48dGV4dCB4PSIxMTMiIHk9IjQ4LjUiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiM4YThhOGEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkI8L3RleHQ+PHJlY3QgeD0iMTI4IiB5PSIzMyIgd2lkdGg9IjI0IiBoZWlnaHQ9IjIyIiByeD0iNiIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjRjJDN0E1Ii8+PHRleHQgeD0iMTQwIiB5PSI0OC41IiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjOGE4YThhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5DPC90ZXh0Pjx0ZXh0IHg9IjE2MCIgeT0iNDgiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjQwMCIgZmlsbD0iIzJiMmIyYiIgdGV4dC1hbmNob3I9InN0YXJ0Ij7qt7zqsbA6IOyDneyCsOufiSAxMzMlIOuLrOyEsTwvdGV4dD48Y2lyY2xlIGN4PSIyMiIgY3k9IjcyIiByPSI4IiBmaWxsPSIjMkU5RTVCIi8+PHRleHQgeD0iMjIiIHk9Ijc2IiBmb250LXNpemU9IjEwIiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7inJM8L3RleHQ+PHRleHQgeD0iMzYiIHk9Ijc2IiBmb250LXNpemU9IjEwLjUiIGZvbnQtd2VpZ2h0PSI0MDAiIGZpbGw9IiMyYjJiMmIiIHRleHQtYW5jaG9yPSJzdGFydCI+7IKs7Iuk66GcOiA57JuUIO2BtOugiOyehCDtm4Qg7LK07YGs66as7Iqk7Yq4IOuPhOyehTwvdGV4dD48Y2lyY2xlIGN4PSIyMiIgY3k9Ijk2IiByPSI4IiBmaWxsPSIjQzAzOTJCIi8+PHRleHQgeD0iMjIiIHk9IjEwMCIgZm9udC1zaXplPSIxMCIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+4pyVPC90ZXh0Pjx0ZXh0IHg9IjM2IiB5PSIxMDAiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjQwMCIgZmlsbD0iIzhhOGE4YSIgdGV4dC1hbmNob3I9InN0YXJ0Ij7shLHqsqkg7Y+J6rCA64qUIO2UvO2VmOq4sDogIuyEseyLpO2VqCI8L3RleHQ+PHJlY3QgeD0iMTIiIHk9IjExNCIgd2lkdGg9IjkyIiBoZWlnaHQ9IjI2IiByeD0iNiIgZmlsbD0iI0ZGRTdENCIgc3Ryb2tlPSIjRjJDN0E1Ii8+PHRleHQgeD0iNTgiIHk9IjEzMSIgZm9udC1zaXplPSIxMC41IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjQjg0RTBGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7snpjtlZwg7KCQIDE8L3RleHQ+PHJlY3QgeD0iMTEwIiB5PSIxMTQiIHdpZHRoPSI5MiIgaGVpZ2h0PSIyNiIgcng9IjYiIGZpbGw9IiNGRkU3RDQiIHN0cm9rZT0iI0YyQzdBNSIvPjx0ZXh0IHg9IjE1NiIgeT0iMTMxIiBmb250LXNpemU9IjEwLjUiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiNCODRFMEYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuqwnOyEoO2VoCDsoJAgMTwvdGV4dD48cmVjdCB4PSIyMDgiIHk9IjExNCIgd2lkdGg9IjkyIiBoZWlnaHQ9IjI2IiByeD0iNiIgZmlsbD0iI0ZGRTdENCIgc3Ryb2tlPSIjRjJDN0E1Ii8+PHRleHQgeD0iMjU0IiB5PSIxMzEiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjgwMCIgZmlsbD0iI0I4NEUwRiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+64uk7J2MIOq4sOuMgCAxPC90ZXh0Pjwvc3ZnPg==',text:"항목별 A/B/C는 \"이 기간에 실제로 본 행동과 결과\" 기준으로 주세요. 근거 한 줄에는 사실(무슨 일, 언제)을 적고, \"성실함\"처럼 성격을 평가하는 말은 피해 주세요. 종합 피드백은 잘한 점 1개, 개선할 점 1개, 다음 기간 기대 1개를 써 주세요.",ex:"예) 근거: 9월 클레임 1건 후 체크리스트를 직접 만들어 이후 0건 / 피드백: 잘한 점 - 라인 자동화 주도, 개선할 점 - 진행 상황 공유를 주 1회로, 기대 - 신규 라인 안정화"},
-  evalTeam:{title:"팀 평가(팀장) 가이드",img:'',text:"팀장 평가는 곧 그 팀의 팀 등급입니다. 팀장 어필시트의 조직성과(KPI·정책 소통·조직 혁신)와 팀원들의 실제 결과를 근거로, 팀 단위로 무엇을 달성했고 어떻게 운영했는지를 평가해 주세요. 팀장 본인의 개인 업무보다 팀 전체의 결과를 봅니다.",ex:"예) KPI: 월 생산량 108%로 A / 운영: 2교대 전환을 이직 없이 정착시켜 A / 리스크: 입고 검사 생략으로 클레임 1건 발생해 B"}
+  evalTeam:{title:"팀 평가(팀장) 가이드",img:'',text:"팀장 평가는 곧 그 팀의 팀 등급입니다. 팀장 어필시트의 조직성과(KPI·정책 소통·조직 혁신)와 팀원들의 실제 결과를 근거로, 팀 단위로 무엇을 달성했고 어떻게 운영했는지를 평가해 주세요. 팀장 본인의 개인 업무보다 팀 전체의 결과를 봅니다.",ex:"예) 팀 성과: 월 생산량 108%로 A / 운영: 2교대 전환을 이직 없이 정착시켜 A / 리스크: 입고 검사 생략으로 클레임 1건 발생해 B"}
 };
 document.querySelectorAll('.help').forEach(h=>{
   const gd=GUIDE[h.dataset.guide];if(!gd)return;
@@ -1464,7 +1486,7 @@ const EV_ITEMS=[
 ];
 /* 팀장 평가(임원 → 팀장) 항목 — 이 등급이 곧 팀 등급. 팀장 어필시트의 '조직성과'(KPI·정책 소통·조직 혁신)와 연결 */
 const TEAM_ITEMS=[
-  {k:'kpi',   name:'팀 목표(KPI) 달성',w:40,d:'팀 목표 대비 실적, 목표의 난이도'},
+  {k:'kpi',   name:'팀 성과',w:40,d:'팀 목표(KPI) 대비 실적, 목표의 난이도'},
   {k:'ops',   name:'팀 운영·인력 관리',w:20,d:'업무 배분, 인력 공백 대응, 팀원 육성'},
   {k:'risk',  name:'품질·리스크 관리',w:15,d:'팀의 클레임·사고·재작업, 기준 준수'},
   {k:'policy',name:'정책 실행·소통',w:15,d:'회사 방침 전달과 실행, 보고 시기'},
@@ -1472,15 +1494,16 @@ const TEAM_ITEMS=[
 ];
 const ITEM_SC={A:3,B:2,C:1};
 let CUR_ITEMS=EV_ITEMS;
-function renderItemsTable(items){
-  CUR_ITEMS=items;
+let CUR_TEAM=false;
+function renderItemsTable(items,isTeam){
+  CUR_ITEMS=items;CUR_TEAM=!!isTeam;
   document.getElementById('ev_items').innerHTML=items.map(it=>`<tr data-k="${it.k}">
   <td><b>${it.name}</b><small>${it.d}</small></td><td class="w">${it.w}%</td>
   <td><div class="igr">${['A','B','C'].map(x=>`<button type="button" data-g="${x}">${x}</button>`).join('')}</div></td>
   <td><input class="tx" type="text" maxlength="100" placeholder="이 등급을 준 이유 (한 줄)"></td></tr>`).join('');
   document.querySelectorAll('#ev_items .igr').forEach(gr=>gr.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
     if(b.disabled)return;gr.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));calcItems(true);})));
-  const team=items===TEAM_ITEMS;
+  const team=CUR_TEAM;
   document.getElementById('ev_items_title').textContent=team?'팀 평가 (팀장)':'항목별 평가';
   document.getElementById('ev_items_sub').textContent=team?'팀 단위 성과와 운영을 평가합니다. 이 등급이 곧 팀 등급이자 팀장 본인 등급입니다.':'어필시트 항목과 별개로, 평가 기간의 업무 전반을 평가합니다';
   document.getElementById('ev_help_indiv').classList.toggle('hidden',team);
@@ -1489,7 +1512,7 @@ function renderItemsTable(items){
 renderItemsTable(EV_ITEMS);
 function itemState(){
   const rows=[...document.querySelectorAll('#ev_items tr')];
-  const out={v:1,set:CUR_ITEMS===TEAM_ITEMS?'team':'indiv',items:rows.map(tr=>({k:tr.dataset.k,g:tr.querySelector('.igr button.on')?.dataset.g||'',r:tr.querySelector('input').value.trim()}))};
+  const out={v:1,set:CUR_TEAM?'team':'indiv',items:rows.map((tr,i)=>({k:tr.dataset.k,w:CUR_ITEMS[i].w,g:tr.querySelector('.igr button.on')?.dataset.g||'',r:tr.querySelector('input').value.trim()}))};
   const done=out.items.every(x=>x.g);
   out.score=done?Math.round(CUR_ITEMS.reduce((a,it,i)=>a+ITEM_SC[out.items[i].g]*it.w/100,0)*100)/100:null;
   out.reco=done?(out.score>=2.5?'A':(out.score>=1.8?'B':'C')):'';
@@ -1614,10 +1637,11 @@ function setEvaluatorIdentity(){
   const name=(currentUser&&currentUser.isEvaluator)?varName:'';
   sel.value=name;
   fillEvalTargets(name);
+  applyWeightGate();
 }
 document.getElementById('ev_evaluator_pick').addEventListener('change',e=>{
   document.getElementById('ev_evaluator').value=e.target.value;
-  fillEvalTargets(e.target.value);
+  fillEvalTargets(e.target.value);applyWeightGate();
 });
 /* S 옵션 활성/비활성: 대표 전용 + 팀 성과(팀장 대상) A캡 */
 /* 사전 평가(2026-H1)는 등급 없이 피드백만 작성 — 등급 부여는 정식 평가(2026-H2)부터 */
@@ -1647,6 +1671,7 @@ function applyGradeRules(){
 }
 document.getElementById('ev_target').addEventListener('change',e=>{
   const name=e.target.value;const body=document.getElementById('ev_body');
+  if(name&&weightsRequired()&&!myWeights()){e.target.value='';body.classList.add('hidden');toast('평가를 시작하기 전에 가중치를 먼저 설정해 주세요','warn');openWeightModal();return;}
   if(!name){body.classList.add('hidden');return;}
   body.classList.remove('hidden');
   const r=emp(name);document.getElementById('ev_teamname').textContent='· '+r.team;
@@ -1668,7 +1693,8 @@ document.getElementById('ev_target').addEventListener('change',e=>{
   updateCharCounts();
   document.querySelectorAll('input[name=grade]').forEach(i=>i.disabled=false);
   applyEvalPeriodVisibility();
-  if(isV2()){const teamT=isTeamPerf(r);renderItemsTable(teamT?TEAM_ITEMS:EV_ITEMS);
+  if(isV2()){const teamT=isTeamPerf(r);const wo=weightsOf(document.getElementById('ev_evaluator').value);
+    renderItemsTable(withWeights(teamT?TEAM_ITEMS:EV_ITEMS,teamT?'team':'indiv',wo),teamT);
     const rec=myEvalRec(name);fillItems(rec&&rec.itemEval);
     document.getElementById('ev_gauge_section').classList.toggle('hidden',teamT);
     renderTeamMembersBox(r,teamT);}
@@ -1677,6 +1703,72 @@ document.getElementById('ev_target').addEventListener('change',e=>{
   refreshWindowUI();
 });
 function kv(t,v){return v?`<div class="kv"><b>${t}</b><span>${esc(v)}</span></div>`:'';}
+/* ================= 평가자별 가중치 (정식평가) =================
+   평가자가 평가 시작 전에 한 번 정하고 저장 → 이후 수정 불가. 그 평가자가 평가하는 모든 사람에게 같은 가중치 적용.
+   저장 위치: '평가기록' 리스트, 평가단계(field_6)='가중치', 피평가자 이메일=평가자 본인, ItemEval=JSON. 결과 메일 일괄 발송 때 이 행은 제외할 것. */
+const W_MIN=5,W_MAX=50,W_STEP=5;
+function wKey(p,email){return p+'|'+(email||'').toLowerCase();}
+function myWeights(){return WEIGHTS[wKey(period(),myEmail)]||null;}
+function weightsOf(evaluatorName){const r=ROSTER.find(x=>x.name===evaluatorName);return r?WEIGHTS[wKey(period(),r.email)]||null:null;}
+function withWeights(base,setName,wo){if(!wo||!wo[setName])return base;return base.map(it=>Object.assign({},it,{w:Number(wo[setName][it.k])||it.w}));}
+function mySets(){const list=targetsOf(varName);return{indiv:list.some(o=>!isTeamPerf(o.r)),team:list.some(o=>isTeamPerf(o.r))};}
+function weightsRequired(){return isV2()&&!!currentUser&&currentUser.isEvaluator&&!VIEW_ONLY&&targetsOf(varName).length>0;}
+function wSummary(wo,setName,base){return base.map(it=>`${it.name} ${wo[setName][it.k]}`).join(' · ');}
+function applyWeightGate(){
+  const bar=document.getElementById('ev_weight_bar');const tsel=document.getElementById('ev_target');if(!bar)return;
+  if(!isV2()){bar.classList.add('hidden');tsel.disabled=false;return;}
+  if(VIEW_ONLY){const n=document.getElementById('ev_evaluator').value;const wo=n&&weightsOf(n);
+    bar.className='wbar'+(n?'':' hidden');
+    bar.innerHTML=n?(wo?`<b>${esc(n)}의 가중치</b> (확정 ${fmtKstLong(wo.time)})<br>${wo.indiv?'팀원 평가: '+wSummary(wo,'indiv',EV_ITEMS):''}${wo.indiv&&wo.team?'<br>':''}${wo.team?'팀장 평가: '+wSummary(wo,'team',TEAM_ITEMS):''}`
+      :`<b>${esc(n)}의 가중치</b>는 이 계정에서 읽을 수 없습니다(평가기록 읽기 권한). 화면의 가중치는 기본값입니다.`):'';
+    tsel.disabled=false;return;}
+  if(!weightsRequired()){bar.classList.add('hidden');tsel.disabled=false;return;}
+  const wo=myWeights();
+  if(!wo){bar.className='wbar need';tsel.disabled=true;resetEvalBody();
+    bar.innerHTML=`<b>평가를 시작하기 전에 가중치를 정해 주세요.</b> 평가 항목별 비중을 직접 정하고 저장하면, 이번 평가 기간 동안 바꿀 수 없습니다. 가중치를 저장해야 피평가자 어필시트를 볼 수 있습니다.<div style="margin-top:8px"><button class="btn primary" type="button" id="ev_weight_open">가중치 설정</button></div>`;
+    document.getElementById('ev_weight_open').onclick=openWeightModal;return;}
+  tsel.disabled=false;bar.className='wbar';
+  bar.innerHTML=`<b>내 가중치</b> · ${fmtKstLong(wo.time)} 확정 · 변경 불가<br>${wo.indiv?'팀원 평가: '+wSummary(wo,'indiv',EV_ITEMS):''}${wo.indiv&&wo.team?'<br>':''}${wo.team?'팀장 평가: '+wSummary(wo,'team',TEAM_ITEMS):''}`;
+}
+function openWeightModal(){
+  if(document.querySelector('.wmodal')||!weightsRequired()||myWeights())return;
+  const need=mySets();
+  const setHtml=(key,title,base,who)=>`<div class="wset" data-set="${key}"><h4>${title} <span class="hint" style="font-weight:400">${who}</span></h4><table>${base.map(it=>`<tr><td><b>${it.name}</b><small>${it.d}</small></td><td style="width:110px;text-align:right"><input type="number" min="${W_MIN}" max="${W_MAX}" step="${W_STEP}" data-k="${it.k}" value="${it.w}"> %</td></tr>`).join('')}</table><div class="sum"></div></div>`;
+  const list=targetsOf(varName);
+  const m=document.createElement('div');m.className='wmodal';
+  m.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="가중치 설정"><h3>평가 항목 가중치 설정</h3>
+    <div class="hint" style="line-height:1.7">평가를 시작하기 전에 항목별 비중을 정해 주세요. <b>저장하면 이번 평가 기간(${periodLabel(period())}) 동안 바꿀 수 없고</b>, 내가 평가하는 모든 사람에게 같은 가중치가 적용됩니다.<br>각 항목 ${W_MIN}~${W_MAX}% · ${W_STEP}% 단위 · 합계 100%. 기본값이 들어 있으니 필요한 항목만 바꾸면 됩니다.</div>
+    ${need.indiv?setHtml('indiv','팀원 평가 항목',EV_ITEMS,`· 대상 ${list.filter(o=>!isTeamPerf(o.r)).length}명`):''}
+    ${need.team?setHtml('team','팀장 평가 항목 (팀 평가)',TEAM_ITEMS,`· 대상 ${list.filter(o=>isTeamPerf(o.r)).map(o=>o.r.name).join(', ')}`):''}
+    <div class="acts"><button class="btn" type="button" id="w_later">나중에</button><button class="btn primary" type="button" id="w_save">저장 (이후 수정 불가)</button></div></div>`;
+  document.body.appendChild(m);
+  const check=()=>{let ok=true;m.querySelectorAll('.wset').forEach(ws=>{const vals=[...ws.querySelectorAll('input')].map(i=>Number(i.value));
+    const sum=vals.reduce((a,b)=>a+b,0);const bad=vals.some(v=>!Number.isInteger(v)||v<W_MIN||v>W_MAX||v%W_STEP!==0);
+    const el=ws.querySelector('.sum');el.className='sum '+(sum===100&&!bad?'ok':'bad');
+    el.textContent=`합계 ${sum}%`+(sum!==100?' — 100%가 되어야 합니다':bad?` — 각 항목 ${W_MIN}~${W_MAX}%, ${W_STEP}% 단위`:' ✓');
+    if(sum!==100||bad)ok=false;});m.querySelector('#w_save').disabled=!ok;return ok;};
+  m.querySelectorAll('input').forEach(i=>i.addEventListener('input',check));check();
+  m.querySelector('#w_later').onclick=()=>m.remove();
+  m.querySelector('#w_save').onclick=async()=>{
+    if(!check())return;
+    const o={v:1,type:'weights'};m.querySelectorAll('.wset').forEach(ws=>{o[ws.dataset.set]={};ws.querySelectorAll('input').forEach(i=>o[ws.dataset.set][i.dataset.k]=Number(i.value));});
+    const txt=[o.indiv&&'팀원 평가: '+wSummary(o,'indiv',EV_ITEMS),o.team&&'팀장 평가: '+wSummary(o,'team',TEAM_ITEMS)].filter(Boolean).join('\n');
+    if(!confirm(`아래 가중치로 저장합니다. 저장 후에는 바꿀 수 없습니다.\n\n${txt}`))return;
+    const btn=m.querySelector('#w_save');btn.disabled=true;btn.textContent='저장 중...';
+    try{await saveMyWeights(o,txt);m.remove();applyWeightGate();toast('가중치를 저장했습니다. 이제 피평가자를 선택해 평가할 수 있습니다');}
+    catch(e){btn.disabled=false;btn.textContent='저장 (이후 수정 불가)';toast('가중치 저장 실패: '+e.message,'bad');}
+  };
+}
+async function saveMyWeights(o,txt){
+  if(myWeights())throw new Error('이미 저장된 가중치가 있습니다');
+  if(!GS.lists||!GS.lists['평가기록'])throw new Error('평가기록에 쓰기 권한이 없습니다. 관리자에게 문의해 주세요.');
+  await refreshGraphToken();
+  const me=ROSTER.find(r=>r.email===myEmail)||{};const at=new Date().toISOString();
+  const fields={Title:period(),field_1:myEmail,field_2:varName,field_3:me.team||'',field_4:myEmail,field_5:varName,
+    field_6:'가중치',field_7:'',field_8:0,field_9:txt,field_10:'확정',field_11:at,ItemEval:JSON.stringify(o)};
+  const res=await createItem(GS.token,GS.siteId,GS.lists['평가기록'],fields);
+  WEIGHTS[wKey(period(),myEmail)]=Object.assign({},o,{spId:res.id,time:at});
+}
 /* 팀장 평가 화면: 그 팀 팀원들의 1차 결과(읽을 수 있는 만큼) — 평가기록 읽기 권한이 없으면 안내만 표시 */
 function renderTeamMembersBox(r,show){
   const box=document.getElementById('ev_team_members');box.classList.toggle('hidden',!show);if(!show){box.innerHTML='';return;}
