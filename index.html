@@ -317,6 +317,31 @@
   .ro .kv:last-child{border:0;margin-bottom:0;padding-bottom:0}
   .ro .kv b{color:var(--brand2);display:block;font-size:13px;margin-bottom:3px;font-weight:800}
   .ro .kv span{color:var(--ink-3);white-space:pre-wrap}
+  .fin-sum{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:4px 0 10px}
+  .fin-sum div{background:var(--soft);border:1px solid var(--glass-edge);border-radius:12px;padding:10px 12px}
+  .fin-sum b{display:block;font-size:20px;color:var(--brand2)} .fin-sum span{font-size:11.5px;color:var(--muted)}
+  .fin-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+  .fin-chip{border:1px solid var(--glass-edge);border-radius:10px;padding:5px 10px;font-size:12.5px;background:var(--soft)}
+  .fin-team{border:1px solid var(--glass-edge);border-radius:14px;padding:14px;margin-top:12px;background:var(--soft2)}
+  .fin-th{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+  .fin-tn{font-size:15.5px;color:var(--brand2)}
+  .fin-tg{display:flex;flex-direction:column;gap:6px;align-items:flex-end;text-align:right}
+  .fin-stat{font-size:13px;margin:8px 0 4px} .fin-stat .bad,.fin-team .bad{color:var(--bad);font-weight:800}
+  .fin-over{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;margin:6px 0}
+  .fin-over input{flex:1;min-width:200px}
+  .fin-note{padding:10px 12px;border-radius:10px;background:var(--gold-soft);border:1px solid var(--gold-line);font-size:12.5px;margin-bottom:10px}
+  table.fin{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  table.fin th{font-size:11.5px;color:var(--muted);text-align:left;padding:6px 5px;border-bottom:1px solid var(--glass-edge);font-weight:700}
+  table.fin td{padding:7px 5px;border-bottom:1px solid var(--glass-edge);vertical-align:middle}
+  table.fin tr.chg{background:var(--gold-soft)} table.fin tr.gh td{font-weight:800;color:var(--brand2);background:var(--soft)}
+  .fcmt{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+  .ftag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;background:var(--gold-soft);color:var(--brand2);white-space:nowrap}
+  .ftag.bad{background:var(--bad-soft);color:var(--bad)}
+  .fsel{padding:6px 8px;border:1px solid var(--glass-edge);border-radius:8px;font:inherit;background:var(--field);color:var(--ink)}
+  .fin-in{padding:7px 9px!important;font-size:12.5px!important}
+  ul.fin-checks{list-style:none;padding:0;margin:8px 0 0} ul.fin-checks li{padding:5px 0;font-size:13px;border-bottom:1px dashed var(--glass-edge)}
+  ul.fin-checks li.ok{color:var(--ok)} ul.fin-checks li.no{color:var(--bad)}
+  @media(max-width:800px){.fin-sum{grid-template-columns:repeat(2,1fr)}}
   .wbar{margin-top:14px;padding:12px 14px;border-radius:12px;border:1px solid var(--gold-line);background:var(--gold-soft);font-size:13px;line-height:1.6}
   .wbar.need{border-color:var(--bad);background:var(--bad-soft)}
   .wbar b{color:var(--brand2)}
@@ -645,6 +670,7 @@
               <button data-tab="appeal" class="on"><span class="dot"></span>본인 어필시트</button>
               <button data-tab="eval"><span class="dot"></span>평가자 입력</button>
               <button data-tab="agg"><span class="dot"></span>집계 · 예산</button>
+              <button data-tab="final"><span class="dot"></span>최종 확정</button>
               <button data-tab="set"><span class="dot"></span>설정</button>
             </nav>
           </div>
@@ -836,6 +862,15 @@
           </table>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ 최종 확정 (대표이사) ============ -->
+  <section id="tab-final" class="hidden">
+    <div class="card">
+      <h2>최종 확정</h2>
+      <p class="sub">팀원은 1차 평가자, 팀장은 임원(팀 평가)에게만 평가받았습니다. 대표이사는 전체 현황을 보고 팀 등급을 맞추고, S를 주고, 필요하면 등급을 다시 나눈 뒤 확정합니다.</p>
+      <div id="fin_body"></div>
     </div>
   </section>
 
@@ -1249,6 +1284,9 @@ async function loadAllFromSharePoint(token){
   WEIGHTS={};
   EVALS.filter(x=>x.evalStage==='가중치').forEach(x=>{const o=parseJ(x.itemEval);if(o)WEIGHTS[wKey(x.period,x.evaluatorEmail)]=Object.assign(o,{spId:x.spId,time:x.submittedAt});});
   EVALS=EVALS.filter(x=>x.evalStage!=='가중치');
+  /* 대표이사 최종 확정 행(최종·팀등급·팀예외·최종확정)도 평가 목록에서 분리 */
+  FIN={};EVALS.filter(x=>FIN_STAGES.includes(x.evalStage)).forEach(x=>{FIN[x.evalStage+'|'+x.targetEmail+'|'+x.period]=x;});
+  EVALS=EVALS.filter(x=>!FIN_STAGES.includes(x.evalStage));FD=null;
 
   const settingItems=await fetchAllItems(token,siteId,lists['설정']);
   SETTINGS={};settingItems.forEach(it=>{const f=it.fields||{};if(f.Title)SETTINGS[f.Title]=f.field_1||'';});
@@ -1286,6 +1324,7 @@ function allowedTabs(){
   if(currentUser.isTarget)t.push('appeal');
   if(currentUser.isEvaluator||currentUser.isCEO||currentUser.isAdmin)t.push('eval');
   if(currentUser.isCEO||currentUser.isAdmin)t.push('agg');
+  if(currentUser.isCEO||currentUser.isAdmin)t.push('final');
   if(currentUser.isAdmin)t.push('set');
   return t;
 }
@@ -1330,11 +1369,12 @@ let tT;function toast(msg,type){const el=document.getElementById('toast');el.tex
 /* ---------- tabs ---------- */
 document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.classList.contains('hidden'))return;
   document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
-  ['appeal','eval','agg','set'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
+  ['appeal','eval','agg','final','set'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
+  if(b.dataset.tab==='final')renderFinal();
   if(b.dataset.tab==='agg')renderAgg();
   if(b.dataset.tab==='eval'){applyWeightGate();if(weightsRequired()&&!myWeights())openWeightModal();}
 });
-document.getElementById('period').addEventListener('change',()=>{fillNames();renderAppealIdentity();setEvaluatorIdentity();});   // setEvaluatorIdentity 안에서 가중치 게이트 갱신
+document.getElementById('period').addEventListener('change',()=>{fillNames();renderAppealIdentity();setEvaluatorIdentity();FD=null;if(!document.getElementById('tab-final').classList.contains('hidden'))renderFinal();});   // setEvaluatorIdentity 안에서 가중치 게이트 갱신
 
 /* ================= 어필시트 ================= */
 function fillNames(){const sel=document.getElementById('ap_name');const cur=sel.value;
@@ -1946,6 +1986,162 @@ function renderAgg(){
   });
   if(!g2.innerHTML)g2.innerHTML='<div class="empty">평가가 입력되면 팀별 예산 게이지가 표시됩니다.</div>';
 }
+/* ================= 대표이사 최종 확정 (정식평가) =================
+   팀원은 1차(팀장/직할 임원), 팀장은 팀 평가(임원)에서만 평가받는다. 대표이사는 전체 현황을 보고
+   ① 팀 등급 맞추기 ② S 부여 ③ 등급 재분배 후 최종 확정.
+   저장: '평가기록'에 평가단계(field_6)가 '최종'(개인 조정·S) / '팀등급' / '팀예외' / '최종확정'인 행.
+   이 행들은 목록 관리 권한이 있는 계정(대표이사·관리자)만 읽을 수 있다. 결과 메일 일괄 발송 때는 이 행을 제외하고,
+   개인 최종 등급 = '최종' 행이 있으면 그 등급, 없으면 1차/팀 평가 등급. */
+const FIN_STAGES=['최종','팀등급','팀예외','최종확정'];
+let FIN={};          // `${단계}|${키}|${기간}` → 평가기록 행
+let FD=null;         // 화면 초안 {adj:{email:{grade,reason}}, team:{팀:{grade,reason}}, over:{팀:사유}, S:[email]}
+let FIN_DIRTY=false, FIN_ONLYEX=false;
+function finRec(stage,key){return FIN[stage+'|'+key+'|'+period()]||null;}
+function finActive(x){return !!(x&&x.status!=='취소');}
+function finConfirmed(){const c=finRec('최종확정','confirm');return !!(c&&c.status==='확정');}
+function finTeams(){
+  const ev=evaluees();const teams=[...new Set(ev.map(r=>r.team))];
+  return teams.map(t=>{const lead=ev.find(r=>r.team===t&&r.teamLead)||null;const members=ev.filter(r=>r.team===t&&!r.teamLead);
+    return{team:t,lead,members,execName:lead?lead.e1:((members[0]&&members[0].e1)||''),direct:!lead};});
+}
+function subRec(r){return EVALS.filter(x=>x.period===period()&&x.targetEmail===r.email&&x.status==='제출완료').slice(-1)[0]||null;}
+function g1of(r){const x=subRec(r);return x?x.grade:'';}
+function infoOf(r){const o=parseJ(subRec(r)&&subRec(r).itemEval)||{};return{score:o.score,reco:o.reco};}
+function finLoadDraft(){
+  FD={adj:{},team:{},over:{},S:[]};
+  evaluees().filter(r=>!r.teamLead).forEach(r=>{const x=finRec('최종',r.email);if(!finActive(x))return;
+    if(x.grade==='S')FD.S.push(r.email);else if(x.grade)FD.adj[r.email]={grade:x.grade,reason:x.comment||''};});
+  finTeams().forEach(T=>{const x=finRec('팀등급','team:'+T.team);if(finActive(x)&&x.grade)FD.team[T.team]={grade:x.grade,reason:x.comment||''};
+    const o=finRec('팀예외','team:'+T.team);if(finActive(o)&&o.comment)FD.over[T.team]=o.comment;});
+  FIN_DIRTY=false;
+}
+function teamFinalOf(T){const d=FD.team[T.team];if(d&&d.grade)return d.grade;return T.lead?g1of(T.lead):'';}
+function memberFinal(r){if(FD.S.includes(r.email))return'S';const a=FD.adj[r.email];if(a&&a.grade)return a.grade;return g1of(r);}
+function memberChanged(r){const f=memberFinal(r);return !!f&&f!=='S'&&f!==g1of(r);}
+function memberReasonOk(r){return !memberChanged(r)||((FD.adj[r.email]||{}).reason||'').trim().length>0;}
+function teamChanged(T){const d=FD.team[T.team];return !!(d&&d.grade&&(T.direct||d.grade!==g1of(T.lead)));}
+function teamReasonOk(T){if(T.direct)return !!teamFinalOf(T);const d=FD.team[T.team];return !(d&&d.grade&&d.grade!==g1of(T.lead))||((d.reason||'').trim().length>0);}
+function teamAvgOf(T,fn){const fs=T.members.map(fn).filter(g=>g&&g!=='S').map(g=>FACTOR[g]);return fs.length?fs.reduce((a,b)=>a+b,0)/fs.length:null;}
+function teamOverOk(T){const a=teamAvgOf(T,memberFinal);return a==null||a<=1.0009||((FD.over[T.team]||'').trim().length>0);}
+function finFlags(r){const x=subRec(r);if(!x)return['미제출'];const i=infoOf(r);const f=[];if(i.reco&&i.reco!==x.grade)f.push(`추천 ${i.reco} ≠ ${x.grade}`);if(x.grade==='C')f.push('C 등급');return f;}
+function sCap(){return Math.max(0,Math.floor(evaluees().length*S_CAP_RATIO));}
+function kpiOf(T){if(!T.lead)return'';const a=APPEALS.find(x=>x.period===period()&&x.targetEmail===T.lead.email);const o=parseJ(a&&a.collab)||{};return((o.org||'').split('\n')[0]||'');}
+const pct=v=>v==null?'-':(v*100).toFixed(1)+'%';
+
+function renderFinal(){
+  const box=document.getElementById('fin_body');if(!box)return;
+  if(!isV2()){box.innerHTML='<div class="empty">최종 확정은 2026 정식 평가부터 사용합니다. 위쪽 평가기간을 정식 평가로 바꿔 주세요.</div>';return;}
+  if(!FD)finLoadDraft();
+  const L=finConfirmed();const cap=sCap();const teams=finTeams();const ev=evaluees();
+  const pendM=ev.filter(r=>!r.teamLead&&!subRec(r)).length,pendL=ev.filter(r=>r.teamLead&&!subRec(r)).length;
+  const byExec={};teams.forEach(T=>{const k=T.direct?'대표이사':T.execName;(byExec[k]=byExec[k]||[]).push(T);});
+  const chips=Object.entries(byExec).map(([e,ts])=>`<span class="fin-chip"><b>${esc(e)}</b> ${ts.map(T=>{const g=T.direct?teamFinalOf(T):g1of(T.lead);return `${esc(T.team)} <span class="gd ${g}">${g||'-'}</span>`;}).join(' · ')}</span>`).join('');
+  const cards=teams.map(T=>{
+    const lx=T.lead&&subRec(T.lead);const tg=teamFinalOf(T);const d=FD.team[T.team]||{};const avg=teamAvgOf(T,memberFinal),avg1=teamAvgOf(T,g1of);
+    const rows=T.members.map(r=>{
+      const x=subRec(r);const i=infoOf(r);const fl=finFlags(r);const fg=memberFinal(r);const ch=memberChanged(r);
+      if(FIN_ONLYEX&&!fl.length&&!ch&&fg!=='S')return'';
+      const sDis=L||(fg!=='S'&&FD.S.length>=cap);
+      return `<tr class="${ch||fg==='S'?'chg':''}"><td><b>${esc(r.name)}</b> <span class="hint">${esc(r.rank)}</span></td>
+        <td style="text-align:center">${x?`<span class="gd ${x.grade}">${x.grade}</span>`:'-'}</td>
+        <td>${i.score!=null?Number(i.score).toFixed(2):'-'} <span class="hint">추천 ${i.reco||'-'}</span></td>
+        <td>${fl.map(f=>`<span class="ftag ${f.startsWith('C')||f==='미제출'?'bad':''}">${f}</span>`).join(' ')}</td>
+        <td class="fcmt" title="${esc(x?x.comment:'')}">${esc(x?x.comment:'')}</td>
+        <td><select class="fsel" data-m="${esc(r.email)}" ${L||!x?'disabled':''}>${['S','A','B','C'].map(g=>`<option value="${g}" ${fg===g?'selected':''} ${g==='S'&&sDis?'disabled':''}>${g}${x&&g===x.grade?' (1차)':''}</option>`).join('')}</select></td>
+        <td>${ch?`<input class="tx fin-in" data-mr="${esc(r.email)}" placeholder="조정 사유 (필수)" value="${esc((FD.adj[r.email]||{}).reason||'')}" ${L?'disabled':''}>`:fg==='S'?'<span class="hint">S 부여 (별도 재원)</span>':''}</td></tr>`;}).join('');
+    return `<div class="fin-team">
+      <div class="fin-th"><div><b class="fin-tn">${esc(T.team)}</b> <span class="hint">${T.direct?`임원 직할 · ${esc(T.execName)}`:`팀장 ${esc(T.lead.name)} · 팀 평가 ${esc(T.execName)}`}</span>
+          ${kpiOf(T)?`<div class="hint" style="margin-top:3px">${esc(kpiOf(T))}</div>`:''}</div>
+        <div class="fin-tg"><div class="hint">${T.direct?'팀 평가 없음 (임원 직할) — 대표이사가 정함':lx?`팀 평가 ${lx.grade} · ${(()=>{const i=infoOf(T.lead);return i.score!=null?Number(i.score).toFixed(2)+' · 추천 '+i.reco:'';})()}`:'<span class="ftag bad">팀 평가 미제출</span>'}</div>
+          <label><b>팀 등급${T.direct?'':' = 팀장 등급'}</b> <select class="fsel" data-t="${esc(T.team)}" ${L||(!T.direct&&!lx)?'disabled':''}>${T.direct&&!tg?'<option value="">선택</option>':''}${['A','B','C'].map(g=>`<option ${tg===g?'selected':''}>${g}</option>`).join('')}</select></label>
+          ${teamChanged(T)&&!T.direct?`<input class="tx fin-in" data-tr="${esc(T.team)}" placeholder="팀 등급 조정 사유 (필수)" value="${esc(d.reason||'')}" ${L?'disabled':''}>`:''}</div></div>
+      <div class="fin-stat">팀원 가중평균 <b class="${avg!=null&&avg>1.0009?'bad':''}">${pct(avg)}</b> <span class="hint">(1차 ${pct(avg1)})</span></div>
+      ${avg!=null&&avg>1.0009?`<div class="fin-over"><span class="ftag bad">100% 초과</span> 등급을 다시 나누거나 예외 사유를 적어 주세요 <input class="tx fin-in" data-over="${esc(T.team)}" placeholder="예외 인정 사유" value="${esc(FD.over[T.team]||'')}" ${L?'disabled':''}></div>`:''}
+      ${T.members.length?`<div style="overflow:auto"><table class="fin"><thead><tr><th>팀원</th><th>1차</th><th>점수</th><th>확인할 점</th><th>1차 피드백</th><th>최종</th><th style="width:22%">사유</th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="hint">표시할 사람이 없습니다</td></tr>'}</tbody></table></div>`:'<div class="hint">팀원 평가 대상 없음</div>'}
+    </div>`;}).join('');
+  const nFlag=ev.filter(r=>!r.teamLead&&subRec(r)&&finFlags(r).length).length;
+  const nChg=ev.filter(r=>!r.teamLead&&memberChanged(r)).length+teams.filter(teamChanged).length;
+  const checks=[
+    ['팀원 1차 · 팀장 팀 평가 모두 제출',pendM===0&&pendL===0,`팀원 미제출 ${pendM}명 · 팀장 미제출 ${pendL}명`],
+    ['모든 팀 등급 확정 (바꾼 팀·임원 직할 팀)',teams.every(teamReasonOk),''],
+    ['조정한 개인 등급 사유 입력',ev.filter(r=>!r.teamLead).every(memberReasonOk),''],
+    ['팀원 가중평균 100% 이하 (넘으면 예외 사유)',teams.every(teamOverOk),''],
+    [`S ${FD.S.length}/${cap}명 이내`,FD.S.length<=cap,'']
+  ];
+  const allOk=checks.every(c=>c[1]);
+  box.innerHTML=`${currentUser&&!currentUser.isCEO?'<div class="fin-note">관리자 계정입니다. 저장·확정하면 입력자(관리자)가 함께 기록됩니다. 실제 결정은 대표이사가 하도록 해 주세요.</div>':''}
+    <div class="fin-sum"><div><b>${ev.length}</b><span>평가 대상</span></div><div><b>${ev.length-pendM-pendL}/${ev.length}</b><span>평가 제출</span></div><div><b>${nFlag}</b><span>확인할 점</span></div><div><b>${nChg}</b><span>대표이사 조정</span></div><div><b>${FD.S.length}/${cap}</b><span>S (5% 이내)</span></div></div>
+    <div class="fin-chips"><span class="hint">평가자별 팀 등급</span>${chips}</div>
+    <label class="hint" style="display:flex;gap:6px;align-items:center;margin:6px 0 4px"><input type="checkbox" id="fin_onlyex" ${FIN_ONLYEX?'checked':''}> 확인할 점·조정한 사람만 보기</label>
+    <div class="hint">최종 칸에서 등급을 바꾸면 사유가 필요합니다. S는 팀원만(팀장은 A까지), 팀 가중평균 계산에서 빠집니다.</div>
+    ${cards}
+    <div class="fin-team"><b>최종 확정</b>
+      <ul class="fin-checks">${checks.map(c=>`<li class="${c[1]?'ok':'no'}">${c[1]?'✓':'✕'} ${c[0]}${!c[1]&&c[2]?` <span class="hint">${c[2]}</span>`:''}</li>`).join('')}</ul>
+      <div class="actions" style="margin-top:8px">${L?`<button class="btn" id="fin_unconfirm">확정 취소</button><span class="hint" style="align-self:center">확정됨 · ${fmtKstLong(finRec('최종확정','confirm').submittedAt)} · ${esc(finRec('최종확정','confirm').evaluatorName)}</span>`
+        :`<button class="btn" id="fin_save" ${FIN_DIRTY?'':'disabled'}>변경 사항 저장</button><button class="btn primary" id="fin_confirm" ${allOk?'':'disabled'}>최종 확정</button><span class="hint" style="align-self:center">${FIN_DIRTY?'저장하지 않은 변경 사항이 있습니다':allOk?'확정하면 등급이 잠깁니다':'위 항목을 모두 마쳐야 확정할 수 있습니다'}</span>`}</div>
+      ${L?finTable(teams):''}</div>`;
+  /* 이벤트 */
+  const dirty=()=>{FIN_DIRTY=true;keepFinScroll(renderFinal);};
+  box.querySelectorAll('select[data-m]').forEach(s=>s.onchange=()=>{const em=s.dataset.m;const r=ROSTER.find(x=>x.email===em);const v=s.value;
+    FD.S=FD.S.filter(x=>x!==em);
+    if(v==='S'){if(FD.S.length>=sCap())return keepFinScroll(renderFinal);FD.S.push(em);delete FD.adj[em];}
+    else if(v===g1of(r))delete FD.adj[em];else FD.adj[em]={grade:v,reason:(FD.adj[em]||{}).reason||''};dirty();});
+  box.querySelectorAll('input[data-mr]').forEach(i=>i.onchange=()=>{FD.adj[i.dataset.mr].reason=i.value;dirty();});
+  box.querySelectorAll('select[data-t]').forEach(s=>s.onchange=()=>{const T=teams.find(x=>x.team===s.dataset.t);const prev=FD.team[T.team]||{};
+    if(!T.direct&&s.value===g1of(T.lead))delete FD.team[T.team];else FD.team[T.team]={grade:s.value,reason:prev.reason||''};dirty();});
+  box.querySelectorAll('input[data-tr]').forEach(i=>i.onchange=()=>{FD.team[i.dataset.tr].reason=i.value;dirty();});
+  box.querySelectorAll('input[data-over]').forEach(i=>i.onchange=()=>{FD.over[i.dataset.over]=i.value;dirty();});
+  document.getElementById('fin_onlyex').onchange=e=>{FIN_ONLYEX=e.target.checked;keepFinScroll(renderFinal);};
+  const sv=document.getElementById('fin_save');if(sv)sv.onclick=()=>finSave(false);
+  const cf=document.getElementById('fin_confirm');if(cf)cf.onclick=()=>finSave(true);
+  const uc=document.getElementById('fin_unconfirm');if(uc)uc.onclick=async()=>{if(!confirm('최종 확정을 취소할까요? 다시 등급을 조정할 수 있게 됩니다.'))return;
+    try{await finUpsert('최종확정','confirm',{name:'최종 확정',team:'',grade:'',reason:'확정 취소',status:'취소'});toast('확정을 취소했습니다');renderFinal();}catch(e){toast('취소 실패: '+e.message,'bad');}};
+}
+function keepFinScroll(fn){const y=window.scrollY;fn();window.scrollTo(0,y);}
+function finTable(teams){
+  const rows=[];
+  teams.forEach(T=>{const tg=teamFinalOf(T);
+    rows.push(`<tr class="gh"><td colspan="5">${esc(T.team)} · 팀 등급 ${tg||'-'}${T.direct?' · 임원 직할':''}</td></tr>`);
+    if(T.lead){const g=g1of(T.lead);rows.push(`<tr><td><b>${esc(T.lead.name)}</b> <span class="hint">팀장 · 팀 평가</span></td><td>${g||'-'}</td><td><b>${tg}</b></td><td>${tg?Math.round(FACTOR[tg]*100)+'%':'-'}</td><td class="hint">${tg!==g?'대표이사 조정: '+esc((FD.team[T.team]||{}).reason||''):''}</td></tr>`);}
+    T.members.forEach(r=>{const g=g1of(r),f=memberFinal(r);rows.push(`<tr><td>${esc(r.name)} <span class="hint">${esc(r.rank)} · 1차</span></td><td>${g||'-'}</td><td><b>${f||'-'}</b></td><td>${f?Math.round(FACTOR[f]*100)+'%':'-'}</td><td class="hint">${f==='S'?'S 부여 (별도 재원)':f!==g?'대표이사 조정: '+esc((FD.adj[r.email]||{}).reason||''):''}</td></tr>`);});
+  });
+  return `<div style="overflow:auto;margin-top:12px"><table class="fin"><thead><tr><th>이름</th><th>1차·팀 평가</th><th>최종</th><th>지급률</th><th>비고</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+}
+async function finUpsert(stage,key,o){
+  if(!GS.lists||!GS.lists['평가기록'])throw new Error('평가기록에 쓰기 권한이 없습니다');
+  const ex=finRec(stage,key);const at=new Date().toISOString();
+  const fields={Title:period(),field_1:key,field_2:o.name||'',field_3:o.team||'',field_4:myEmail,field_5:varName,field_6:stage,
+    field_7:o.grade||'',field_8:o.grade?FACTOR[o.grade]:0,field_9:o.reason||'',field_10:o.status||'조정',field_11:at,ItemEval:JSON.stringify(o.extra||{})};
+  const rec={period:period(),targetEmail:key,empName:fields.field_2,empTeam:fields.field_3,evaluatorEmail:myEmail,evaluatorName:varName,evalStage:stage,grade:fields.field_7,factor:fields.field_8,comment:fields.field_9,status:fields.field_10,submittedAt:at,itemEval:fields.ItemEval};
+  if(ex){await updateItem(GS.token,GS.siteId,GS.lists['평가기록'],ex.spId,fields);Object.assign(ex,rec);}
+  else{const res=await createItem(GS.token,GS.siteId,GS.lists['평가기록'],fields);FIN[stage+'|'+key+'|'+period()]=Object.assign(rec,{spId:res.id});}
+}
+async function finSave(andConfirm){
+  if(finConfirmed())return toast('이미 확정되었습니다','warn');
+  if(andConfirm&&!confirm('최종 확정할까요? 확정 후에는 「확정 취소」 전까지 등급을 바꿀 수 없습니다.'))return;
+  const btns=[...document.querySelectorAll('#fin_save,#fin_confirm')];btns.forEach(b=>b.disabled=true);
+  try{
+    await refreshGraphToken();
+    const ev=evaluees();
+    for(const r of ev.filter(x=>!x.teamLead)){
+      const ex=finRec('최종',r.email);const g1=g1of(r);
+      if(FD.S.includes(r.email))await finUpsert('최종',r.email,{name:r.name,team:r.team,grade:'S',reason:'S 부여',extra:{type:'final',from:g1}});
+      else if(memberChanged(r))await finUpsert('최종',r.email,{name:r.name,team:r.team,grade:memberFinal(r),reason:(FD.adj[r.email]||{}).reason||'',extra:{type:'final',from:g1}});
+      else if(finActive(ex))await finUpsert('최종',r.email,{name:r.name,team:r.team,grade:'',reason:'',status:'취소'});
+    }
+    for(const T of finTeams()){
+      const k='team:'+T.team;const ex=finRec('팀등급',k);
+      if(teamChanged(T))await finUpsert('팀등급',k,{name:T.team,team:T.team,grade:teamFinalOf(T),reason:(FD.team[T.team]||{}).reason||'',extra:{type:'team',from:T.lead?g1of(T.lead):''}});
+      else if(finActive(ex))await finUpsert('팀등급',k,{name:T.team,team:T.team,grade:'',reason:'',status:'취소'});
+      const ox=finRec('팀예외',k);const ov=(FD.over[T.team]||'').trim();
+      if(ov)await finUpsert('팀예외',k,{name:T.team,team:T.team,reason:ov});else if(finActive(ox))await finUpsert('팀예외',k,{name:T.team,team:T.team,reason:'',status:'취소'});
+    }
+    if(andConfirm)await finUpsert('최종확정','confirm',{name:'최종 확정',team:'',reason:`S ${FD.S.length}명 · 조정 ${ev.filter(r=>!r.teamLead&&memberChanged(r)).length}명`,status:'확정'});
+    FIN_DIRTY=false;toast(andConfirm?'최종 확정했습니다':'저장했습니다');
+  }catch(e){toast('저장 실패: '+e.message,'bad');}
+  renderFinal();
+}
+
 /* ================= 로그인 / 로그아웃 (Azure AD / MSAL) =================
    Microsoft 365 계정으로 로그인하며, 실제 데이터 접근 통제는 SharePoint 리스트 권한(서버 측)이 담당합니다.
    화면상의 탭 표시/숨김은 UX 편의를 위한 것으로, 최종 접근 제어는 SharePoint 권한 설정으로 이중 보장하는 것을 권장합니다. */
