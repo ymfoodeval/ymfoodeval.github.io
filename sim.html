@@ -319,6 +319,7 @@
   .ro .kv b{color:var(--brand2);display:block;font-size:13px;margin-bottom:3px;font-weight:800}
   .ro .kv span{color:var(--ink-3);white-space:pre-wrap}
   .cmbs{display:flex;flex-wrap:wrap;gap:6px}
+  .combo-btn{padding:4px 12px!important;font-size:12px!important;margin-left:8px;vertical-align:middle}
   .cmb{display:inline-flex;flex-direction:column;align-items:center;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--field);font-size:12px;font-weight:700;color:var(--ink)}
   .cmb small{font-weight:400;color:var(--muted);font-size:11px}
   .cmb.eq{border-color:var(--ok)}
@@ -2101,7 +2102,7 @@ function renderFinal(){
         <td><select class="fsel" data-m="${esc(r.email)}" ${L||!x?'disabled':''}>${['S','A','B','C'].map(g=>`<option value="${g}" ${fg===g?'selected':''} ${g==='S'&&sDis?'disabled':''}>${g}${x&&g===x.grade?' (1차)':''}</option>`).join('')}</select></td>
         <td>${ch?`<input class="tx fin-in" data-mr="${esc(r.email)}" placeholder="조정 사유 (필수)" value="${esc((FD.adj[r.email]||{}).reason||'')}" ${L?'disabled':''}>`:fg==='S'?'<span class="hint">S 부여 (별도 재원)</span>':''}</td></tr>`;}).join('');
     return `<div class="fin-team">
-      <div class="fin-th"><div><b class="fin-tn">${esc(T.team)}</b> <span class="hint">${T.direct?`임원 직할 · ${esc(T.execName)}`:`팀장 ${esc(T.lead.name)} · 팀 평가 ${esc(T.execName)}`}</span>
+      <div class="fin-th"><div><b class="fin-tn">${esc(T.team)}</b> <span class="hint">${T.direct?`임원 직할 · ${esc(T.execName)}`:`팀장 ${esc(T.lead.name)} · 팀 평가 ${esc(T.execName)}`}</span>${T.members.length?` <button class="btn combo-btn" type="button" data-combo="${esc(T.team)}">경우의 수</button>`:''}
           ${kpiOf(T)?`<div class="hint" style="margin-top:3px">${esc(kpiOf(T))}</div>`:''}</div>
         <div class="fin-tg"><div class="hint">${T.direct?'팀 평가 없음 (임원 직할) — 대표이사가 정함':lx?`팀 평가 ${lx.grade} · ${(()=>{const i=infoOf(T.lead);return i.score!=null?Number(i.score).toFixed(2)+' · 추천 '+i.reco:'';})()}`:'<span class="ftag bad">팀 평가 미제출</span>'}</div>
           <label><b>팀 등급${T.direct?'':' = 팀장 등급'}</b> <select class="fsel" data-t="${esc(T.team)}" ${L||(!T.direct&&!lx)?'disabled':''}>${T.direct&&!tg?'<option value="">선택</option>':''}${['A','B','C'].map(g=>`<option ${tg===g?'selected':''}>${g}</option>`).join('')}</select></label>
@@ -2123,8 +2124,7 @@ function renderFinal(){
   box.innerHTML=`${currentUser&&!currentUser.isCEO?'<div class="fin-note">관리자 계정입니다. 저장·확정하면 입력자(관리자)가 함께 기록됩니다. 실제 결정은 대표이사가 하도록 해 주세요.</div>':''}
     <div class="fin-sum"><div><b>${ev.length}</b><span>평가 대상</span></div><div><b>${ev.length-pendM-pendL}/${ev.length}</b><span>평가 제출</span></div><div><b>${nFlag}</b><span>확인할 점</span></div><div><b>${nChg}</b><span>대표이사 조정</span></div><div><b>${FD.S.length}/${cap}</b><span>S (5% 이내)</span></div></div>
     <div class="fin-chips"><span class="hint">평가자별 팀 등급</span>${chips}</div>
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:6px 0 4px"><label class="hint" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="fin_onlyex" ${FIN_ONLYEX?'checked':''}> 확인할 점·조정한 사람만 보기</label>
-      <button class="btn" type="button" id="fin_combo" style="padding:7px 14px;font-size:12.5px">팀 가중평균 맞추는 경우의 수</button></div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:6px 0 4px"><label class="hint" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="fin_onlyex" ${FIN_ONLYEX?'checked':''}> 확인할 점·조정한 사람만 보기</label></div>
     <div class="hint">최종 칸에서 등급을 바꾸면 사유가 필요합니다. S는 팀원만(팀장은 A까지), 팀 가중평균 계산에서 빠집니다.</div>
     ${cards}
     <div class="fin-team"><b>최종 확정</b>
@@ -2144,16 +2144,16 @@ function renderFinal(){
   box.querySelectorAll('input[data-tr]').forEach(i=>i.onchange=()=>{FD.team[i.dataset.tr].reason=i.value;dirty();});
   box.querySelectorAll('input[data-over]').forEach(i=>i.onchange=()=>{FD.over[i.dataset.over]=i.value;dirty();});
   document.getElementById('fin_onlyex').onchange=e=>{FIN_ONLYEX=e.target.checked;keepFinScroll(renderFinal);};
-  document.getElementById('fin_combo').onclick=openComboModal;
+  box.querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>openComboModal(b.dataset.combo));
   const sv=document.getElementById('fin_save');if(sv)sv.onclick=()=>finSave(false);
   const cf=document.getElementById('fin_confirm');if(cf)cf.onclick=()=>finSave(true);
   const uc=document.getElementById('fin_unconfirm');if(uc)uc.onclick=async()=>{if(!confirm('최종 확정을 취소할까요? 다시 등급을 조정할 수 있게 됩니다.'))return;
     try{await finUpsert('최종확정','confirm',{name:'최종 확정',team:'',grade:'',reason:'확정 취소',status:'취소'});toast('확정을 취소했습니다');renderFinal();}catch(e){toast('취소 실패: '+e.message,'bad');}};
 }
 /* 팀 가중평균 100% 이하가 되는 A·B·C 인원 조합 (지급률 A110·B100·C90 → 평균≤100% ⇔ A 인원 ≤ C 인원, S는 별도 재원이라 제외) */
-function openComboModal(){
+function openComboModal(team){
   document.querySelectorAll('.wmodal.combo').forEach(m=>m.remove());
-  const teams=finTeams().filter(T=>T.members.length);
+  const teams=finTeams().filter(T=>T.members.length&&(!team||T.team===team));
   const blocks=teams.map(T=>{
     const fin=T.members.map(memberFinal);const nS=fin.filter(g=>g==='S').length;const n=T.members.length-nS;
     const cur={A:fin.filter(g=>g==='A').length,B:fin.filter(g=>g==='B').length,C:fin.filter(g=>g==='C').length};
@@ -2166,12 +2166,13 @@ function openComboModal(){
     return `<div class="wset"><h4>${esc(T.team)} <span class="hint" style="font-weight:400">· 팀원 ${n}명${nS?` (S ${nS}명 제외)`:''} · 지금 A ${cur.A} · B ${cur.B} · C ${cur.C} → <b style="color:${ok?'var(--ok)':'var(--bad)'}">${curAvg==null?'-':curAvg.toFixed(1)+'%'}</b></span></h4>
       <div class="hint" style="margin-bottom:6px">A는 최대 ${Math.floor(n/2)}명까지 (그만큼 C가 있어야 함) · 가능한 조합 ${combos.length}가지</div><div class="cmbs">${chips||'<span class="hint">팀원 없음</span>'}</div></div>`;}).join('');
   const m=document.createElement('div');m.className='wmodal combo';
-  m.innerHTML=`<div class="box" style="max-width:760px"><h3>팀 가중평균 맞추는 경우의 수</h3>
+  m.innerHTML=`<div class="box" style="max-width:640px"><h3>${team?esc(team)+' · ':''}팀 가중평균 맞추는 경우의 수</h3>
     <div class="hint" style="line-height:1.7">지급률이 A 110% · B 100% · C 90%라서 <b>팀원 가중평균이 100% 이하가 되려면 A 인원이 C 인원보다 많으면 안 됩니다</b> (A ≤ C). S는 별도 재원이라 계산에서 빠집니다.<br>
     <span class="cmb cur" style="pointer-events:none">지금 분포</span> <span class="cmb eq" style="pointer-events:none">정확히 100%</span> 아래 조합이 모두 가능한 분포입니다.</div>
     ${blocks}<div class="acts"><button class="btn primary" type="button" id="combo_close">닫기</button></div></div>`;
   document.body.appendChild(m);
   m.querySelector('#combo_close').onclick=()=>m.remove();
+  m.addEventListener('click',e=>{if(e.target===m)m.remove();});
 }
 function keepFinScroll(fn){const y=window.scrollY;fn();window.scrollTo(0,y);}
 function finTable(teams){
