@@ -318,6 +318,10 @@
   .ro .kv b{color:var(--brand2);display:block;font-size:13px;margin-bottom:3px;font-weight:800}
   .ro .kv span{color:var(--ink-3);white-space:pre-wrap}
   .cmbs{display:flex;flex-wrap:wrap;gap:6px}
+  .fdet{cursor:pointer} td.fdet:hover,b.fdet:hover{color:var(--brand2);text-decoration:underline}
+  .detbox{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--soft);border:1px solid var(--glass-edge);font-size:13px;line-height:1.7}
+  .detbox div{white-space:pre-wrap;margin-top:4px}
+  .detap .kv span{white-space:pre-wrap}
   .combo-btn{padding:4px 12px!important;font-size:12px!important;margin-left:8px;vertical-align:middle}
   .cmb{display:inline-flex;flex-direction:column;align-items:center;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--field);font-size:12px;font-weight:700;color:var(--ink)}
   .cmb small{font-weight:400;color:var(--muted);font-size:11px}
@@ -2093,15 +2097,15 @@ function renderFinal(){
       const x=subRec(r);const i=infoOf(r);const fl=finFlags(r);const fg=memberFinal(r);const ch=memberChanged(r);
       if(FIN_ONLYEX&&!fl.length&&!ch&&fg!=='S')return'';
       const sDis=L||(fg!=='S'&&FD.S.length>=cap);
-      return `<tr class="${ch||fg==='S'?'chg':''}"><td><b>${esc(r.name)}</b> <span class="hint">${esc(r.rank)}</span></td>
+      return `<tr class="${ch||fg==='S'?'chg':''}"><td><b class="fdet" data-det="${esc(r.email)}" title="눌러서 어필시트·피드백 전체 보기">${esc(r.name)}</b> <span class="hint">${esc(r.rank)}</span></td>
         <td style="text-align:center">${x?`<span class="gd ${x.grade}">${x.grade}</span>`:'-'}</td>
         <td>${i.score!=null?Number(i.score).toFixed(2):'-'} <span class="hint">추천 ${i.reco||'-'}</span></td>
         <td>${fl.map(f=>`<span class="ftag ${f.startsWith('C')||f==='미제출'?'bad':''}">${f}</span>`).join(' ')}</td>
-        <td class="fcmt" title="${esc(x?x.comment:'')}">${esc(x?x.comment:'')}</td>
+        <td class="fcmt fdet" data-det="${esc(r.email)}" title="눌러서 어필시트·피드백 전체 보기">${esc(x?x.comment:'미제출')}</td>
         <td><select class="fsel" data-m="${esc(r.email)}" ${L||!x?'disabled':''}>${['S','A','B','C'].map(g=>`<option value="${g}" ${fg===g?'selected':''} ${g==='S'&&sDis?'disabled':''}>${g}${x&&g===x.grade?' (1차)':''}</option>`).join('')}</select></td>
         <td>${ch?`<input class="tx fin-in" data-mr="${esc(r.email)}" placeholder="조정 사유 (필수)" value="${esc((FD.adj[r.email]||{}).reason||'')}" ${L?'disabled':''}>`:fg==='S'?'<span class="hint">S 부여 (별도 재원)</span>':''}</td></tr>`;}).join('');
     return `<div class="fin-team">
-      <div class="fin-th"><div><b class="fin-tn">${esc(T.team)}</b> <span class="hint">${T.direct?`임원 직할 · ${esc(T.execName)}`:`팀장 ${esc(T.lead.name)} · 팀 평가 ${esc(T.execName)}`}</span>${T.members.length?` <button class="btn combo-btn" type="button" data-combo="${esc(T.team)}">경우의 수</button>`:''}
+      <div class="fin-th"><div><b class="fin-tn">${esc(T.team)}</b> <span class="hint">${T.direct?`임원 직할 · ${esc(T.execName)}`:`팀장 ${esc(T.lead.name)} · 팀 평가 ${esc(T.execName)}`}</span>${T.members.length?` <button class="btn combo-btn" type="button" data-combo="${esc(T.team)}">경우의 수</button>`:''}${T.lead?` <button class="btn combo-btn" type="button" data-det="${esc(T.lead.email)}">팀장 어필·평가 보기</button>`:''}
           ${kpiOf(T)?`<div class="hint" style="margin-top:3px">${esc(kpiOf(T))}</div>`:''}</div>
         <div class="fin-tg"><div class="hint">${T.direct?'팀 평가 없음 (임원 직할) — 대표이사가 정함':lx?`팀 평가 ${lx.grade} · ${(()=>{const i=infoOf(T.lead);return i.score!=null?Number(i.score).toFixed(2)+' · 추천 '+i.reco:'';})()}`:'<span class="ftag bad">팀 평가 미제출</span>'}</div>
           <label><b>팀 등급${T.direct?'':' = 팀장 등급'}</b> <select class="fsel" data-t="${esc(T.team)}" ${L||(!T.direct&&!lx)?'disabled':''}>${T.direct&&!tg?'<option value="">선택</option>':''}${['A','B','C'].map(g=>`<option ${tg===g?'selected':''}>${g}</option>`).join('')}</select></label>
@@ -2144,6 +2148,7 @@ function renderFinal(){
   box.querySelectorAll('input[data-over]').forEach(i=>i.onchange=()=>{FD.over[i.dataset.over]=i.value;dirty();});
   document.getElementById('fin_onlyex').onchange=e=>{FIN_ONLYEX=e.target.checked;keepFinScroll(renderFinal);};
   box.querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>openComboModal(b.dataset.combo));
+  box.querySelectorAll('[data-det]').forEach(b=>b.onclick=()=>openDetailModal(b.dataset.det));
   const sv=document.getElementById('fin_save');if(sv)sv.onclick=()=>finSave(false);
   const cf=document.getElementById('fin_confirm');if(cf)cf.onclick=()=>finSave(true);
   const uc=document.getElementById('fin_unconfirm');if(uc)uc.onclick=async()=>{if(!confirm('최종 확정을 취소할까요? 다시 등급을 조정할 수 있게 됩니다.'))return;
@@ -2171,6 +2176,28 @@ function openComboModal(team){
     ${blocks}<div class="acts"><button class="btn primary" type="button" id="combo_close">닫기</button></div></div>`;
   document.body.appendChild(m);
   m.querySelector('#combo_close').onclick=()=>m.remove();
+  m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+}
+/* 최종 확정: 한 사람의 어필시트 + 평가(항목별 등급·근거·피드백) 전체 보기 */
+function openDetailModal(email){
+  document.querySelectorAll('.wmodal.detail').forEach(m=>m.remove());
+  const r=ROSTER.find(x=>x.email===email);if(!r)return;
+  const ap=APPEALS.find(a=>a.period===period()&&a.targetEmail===email);
+  const x=subRec(r);const o=parseJ(x&&x.itemEval)||{};
+  const base=o.set==='team'||r.teamLead?TEAM_ITEMS:EV_ITEMS;const im={};(o.items||[]).forEach(i=>im[i.k]=i);
+  const rows=base.map(it=>{const i=im[it.k]||{};return `<tr><td><b>${it.name}</b></td><td style="text-align:center">${i.w!=null?i.w:it.w}%</td><td style="text-align:center">${i.g?`<span class="gd ${i.g}">${i.g}</span>`:'-'}</td><td>${esc(i.r||'')}</td></tr>`;}).join('');
+  const fin=r.teamLead?null:memberFinal(r);
+  const m=document.createElement('div');m.className='wmodal detail';
+  m.innerHTML=`<div class="box" style="max-width:760px"><h3>${esc(r.name)} <span class="hint" style="font-weight:400">${esc(r.team)} · ${esc(r.rank)}</span></h3>
+    <div class="wset"><h4>${r.teamLead?'팀 평가':'1차 평가'} ${x?`· <span class="gd ${x.grade}">${x.grade}</span>`:''} <span class="hint" style="font-weight:400">${x?`평가자 ${esc(x.evaluatorName)} · ${x.status==='제출완료'?'제출 '+fmtKstLong(x.submittedAt):'작성 중'}`:'아직 평가가 없습니다'}</span></h4>
+      ${x?`<table class="fin"><thead><tr><th>평가 항목</th><th style="text-align:center">가중치</th><th style="text-align:center">등급</th><th>근거</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="hint" style="margin:6px 0">환산 점수 ${o.score!=null?Number(o.score).toFixed(2):'-'} / 3.00 · 추천 ${o.reco||'-'} → 확정 ${x.grade}${fin&&fin!==x.grade?` · <b style="color:var(--brand2)">대표이사 화면 최종 ${fin}</b>`:''}</div>
+      <div class="detbox"><b>피드백</b><div>${esc(x.comment||'')}</div></div>`:''}</div>
+    <div class="wset"><h4>어필시트 <span class="hint" style="font-weight:400">${ap?(ap.status==='제출완료'?'제출 '+fmtKstLong(ap.submittedAt):'임시저장'):''}</span></h4>
+      ${ap?`<div class="detap">${appealHtml(ap)}</div>`:'<div class="hint">어필시트를 제출하지 않았습니다.</div>'}</div>
+    <div class="acts"><button class="btn primary" type="button" id="det_close">닫기</button></div></div>`;
+  document.body.appendChild(m);
+  m.querySelector('#det_close').onclick=()=>m.remove();
   m.addEventListener('click',e=>{if(e.target===m)m.remove();});
 }
 function keepFinScroll(fn){const y=window.scrollY;fn();window.scrollTo(0,y);}
