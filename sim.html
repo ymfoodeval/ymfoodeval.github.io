@@ -331,6 +331,8 @@
   .cmb small{font-weight:400;color:var(--muted);font-size:11px}
   .cmb.eq{border-color:var(--ok)}
   .cmb.cur{background:var(--brand1);border-color:var(--brand1);color:#fff} .cmb.cur small{color:#fff}
+  .cmb.cur.over{background:var(--bad);border-color:var(--bad)}
+  .cmb.near{border:2px dashed var(--brand1);background:var(--gold-soft)}
   .fin-sum{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:4px 0 10px}
   .fin-sum div{background:var(--soft);border:1px solid var(--glass-edge);border-radius:12px;padding:10px 12px}
   .fin-sum b{display:block;font-size:20px;color:var(--brand2)} .fin-sum span{font-size:11.5px;color:var(--muted)}
@@ -2168,15 +2170,19 @@ function openComboModal(team){
     const curAvg=n?(cur.A*110+cur.B*100+cur.C*90)/n:null;
     const combos=[];for(let a=0;a<=n;a++)for(let c=a;c<=n-a;c++){const b=n-a-c;combos.push({a,b,c,avg:(a*110+b*100+c*90)/n});}
     combos.sort((x,y)=>y.a-x.a||x.c-y.c);
-    const chips=combos.map(o=>{const isCur=o.a===cur.A&&o.b===cur.B&&o.c===cur.C;
-      return `<span class="cmb ${isCur?'cur':''} ${o.a===o.c?'eq':''}">A ${o.a} · B ${o.b} · C ${o.c}<small>${o.avg.toFixed(1)}%</small></span>`;}).join('');
     const ok=curAvg==null||curAvg<=100.0001;
+    /* 지금 분포가 100%를 넘으면 목록에 없으므로 따로 보여 주고, 가장 적게 바꾸는 조합을 '추천'으로 표시 */
+    const dist=o=>(Math.abs(o.a-cur.A)+Math.abs(o.b-cur.B)+Math.abs(o.c-cur.C))/2;
+    const minD=ok?0:Math.min(...combos.map(dist));
+    const chips=(ok||!n?'':`<span class="cmb cur over">지금 A ${cur.A} · B ${cur.B} · C ${cur.C}<small>${curAvg.toFixed(1)}% · 초과</small></span>`)+
+      combos.map(o=>{const isCur=o.a===cur.A&&o.b===cur.B&&o.c===cur.C;const near=!ok&&dist(o)===minD;
+      return `<span class="cmb ${isCur?'cur':''} ${o.a===o.c?'eq':''} ${near?'near':''}">A ${o.a} · B ${o.b} · C ${o.c}<small>${o.avg.toFixed(1)}%${near?` · ${minD}명만 바꾸면 됨`:''}</small></span>`;}).join('');
     return `<div class="wset"><h4>${esc(T.team)} <span class="hint" style="font-weight:400">· 팀원 ${n}명${nS?` (S ${nS}명 제외)`:''} · 지금 A ${cur.A} · B ${cur.B} · C ${cur.C} → <b style="color:${ok?'var(--ok)':'var(--bad)'}">${curAvg==null?'-':curAvg.toFixed(1)+'%'}</b></span></h4>
       <div class="hint" style="margin-bottom:6px">A는 최대 ${Math.floor(n/2)}명까지 (그만큼 C가 있어야 함) · 가능한 조합 ${combos.length}가지</div><div class="cmbs">${chips||'<span class="hint">팀원 없음</span>'}</div></div>`;}).join('');
   const m=document.createElement('div');m.className='wmodal combo';
   m.innerHTML=`<div class="box" style="max-width:640px"><h3>${team?esc(team)+' · ':''}팀 가중평균 맞추는 경우의 수</h3>
     <div class="hint" style="line-height:1.7">지급률이 A 110% · B 100% · C 90%라서 <b>팀원 가중평균이 100% 이하가 되려면 A 인원이 C 인원보다 많으면 안 됩니다</b> (A ≤ C). S는 별도 재원이라 계산에서 빠집니다.<br>
-    <span class="cmb cur" style="pointer-events:none">지금 분포</span> <span class="cmb eq" style="pointer-events:none">정확히 100%</span> 아래 조합이 모두 가능한 분포입니다.</div>
+    <span class="cmb cur" style="pointer-events:none">지금 분포</span> <span class="cmb eq" style="pointer-events:none">정확히 100%</span> <span class="cmb near" style="pointer-events:none">지금에서 가장 적게 바꾸는 조합</span> 지금 분포가 100%를 넘으면 빨간색으로 맨 앞에 나오고, 나머지는 모두 가능한 분포입니다.</div>
     ${blocks}<div class="acts"><button class="btn primary" type="button" id="combo_close">닫기</button></div></div>`;
   document.body.appendChild(m);
   m.querySelector('#combo_close').onclick=()=>m.remove();
