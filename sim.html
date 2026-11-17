@@ -2124,9 +2124,9 @@ function renderFinal(){
         <td><select class="fsel" data-m="${esc(r.email)}" ${L||!x?'disabled':''}>${['S','A','B','C'].map(g=>`<option value="${g}" ${fg===g?'selected':''} ${g==='S'&&sDis?'disabled':''}>${g}${x&&g===baseOf(r)?(execAdjRec(r)?' (임원)':' (1차)'):''}</option>`).join('')}</select></td>
         <td>${ch?`<input class="tx fin-in" data-mr="${esc(r.email)}" placeholder="조정 사유 (필수)" value="${esc((FD.adj[r.email]||{}).reason||'')}" ${L?'disabled':''}>`:fg==='S'?'<span class="hint">S 부여 (별도 재원)</span>':''}</td></tr>`;}).join('');
     return `<div class="fin-team">
-      <div class="fin-th"><div><b class="fin-tn">${esc(T.team)}</b> <span class="hint">${T.direct?`임원 직할 · ${esc(T.execName)}`:`팀장 ${esc(T.lead.name)} · 팀 평가 ${esc(T.execName)}`}</span>${T.members.length?` <button class="btn combo-btn" type="button" data-combo="${esc(T.team)}">경우의 수</button>`:''}${T.lead?` <button class="btn combo-btn" type="button" data-det="${esc(T.lead.email)}">팀장 어필·평가 보기</button>`:''}
+      <div class="fin-th"><div><b class="fin-tn">${esc(T.team)}</b> <span class="hint">${T.direct?`임원 직할 · ${esc(T.execName)}`:`팀장 ${esc(T.lead.name)} · 팀 평가 ${esc(T.execName)}`}</span>${T.members.length||poolTeams(T.execName).length>=2?` <button class="btn combo-btn" type="button" data-combo="${esc(T.team)}">경우의 수</button>`:''}${T.lead?` <button class="btn combo-btn" type="button" data-det="${esc(T.lead.email)}">팀장 어필·평가 보기</button>`:''}
           ${kpiOf(T)?`<div class="hint" style="margin-top:3px">${esc(kpiOf(T))}</div>`:''}</div>
-        <div class="fin-tg"><div class="hint">${T.direct?'팀 평가 없음 (임원 직할) — 대표이사가 정함':lx?`팀 평가 ${lx.grade} · ${(()=>{const i=infoOf(T.lead);return i.score!=null?Number(i.score).toFixed(2)+' · 추천 '+i.reco:'';})()}`:'<span class="ftag bad">팀 평가 미제출</span>'}</div>
+        <div class="fin-tg"><div class="hint">${T.direct?'팀 평가 없음 (임원 직할) — 대표이사가 정함':lx?`팀 평가 ${lx.grade}${execAdjRec(T.lead)?` → <b>임원 조율 ${execAdjRec(T.lead).grade}</b> (${esc(execAdjRec(T.lead).comment||'')})`:''} · ${(()=>{const i=infoOf(T.lead);return i.score!=null?Number(i.score).toFixed(2)+' · 추천 '+i.reco:'';})()}`:'<span class="ftag bad">팀 평가 미제출</span>'}</div>
           <label><b>팀 등급${T.direct?'':' = 팀장 등급'}</b> <select class="fsel" data-t="${esc(T.team)}" ${L||(!T.direct&&!lx)?'disabled':''}>${T.direct&&!tg?'<option value="">선택</option>':''}${['A','B','C'].map(g=>`<option ${tg===g?'selected':''}>${g}</option>`).join('')}</select></label>
           ${teamChanged(T)&&!T.direct?`<input class="tx fin-in" data-tr="${esc(T.team)}" placeholder="팀 등급 조정 사유 (필수)" value="${esc(d.reason||'')}" ${L?'disabled':''}>`:''}</div></div>
       <div class="fin-stat">팀원 가중평균 <b class="${avg!=null&&avg>1.0009?'bad':''}">${pct(avg)}</b> <span class="hint">(1차 ${pct(avg1)})</span></div>
@@ -2180,7 +2180,7 @@ function renderFinal(){
 /* 팀 가중평균 100% 이하가 되는 A·B·C 인원 조합 (지급률 A110·B100·C90 → 평균≤100% ⇔ A 인원 ≤ C 인원, S는 별도 재원이라 제외) */
 function openComboModal(team){
   const T=finTeams().find(x=>x.team===team);if(!T)return;
-  const bl=[comboBlock(T.team,T.members,memberFinal)];const P=poolTeams(T.execName);
+  const bl=T.members.length?[comboBlock(T.team,T.members,memberFinal)]:[];const P=poolTeams(T.execName);
   if(P.length>=2)bl.push(comboBlock(`${T.execName} 담당 팀 합산 (${P.map(t=>t.team).join(' + ')})`,P.flatMap(pm),poolFinal));
   showComboModal(T.team,bl);
 }
