@@ -2088,14 +2088,14 @@ function finLoadDraft(){
     const o=finRec('팀예외','team:'+T.team);if(finActive(o)&&o.comment)FD.over[T.team]=o.comment;});
   FIN_DIRTY=false;
 }
-function teamFinalOf(T){const d=FD.team[T.team];if(d&&d.grade)return d.grade;return T.lead?g1of(T.lead):'';}
+function teamFinalOf(T){const d=FD.team[T.team];if(d&&d.grade)return d.grade;return T.lead?baseOf(T.lead):'';}
 function memberFinal(r){if(FD.S.includes(r.email))return'S';const a=FD.adj[r.email];if(a&&a.grade)return a.grade;return baseOf(r);}   // 기준 = 임원 조율 등급(없으면 1차)
 function memberChanged(r){const f=memberFinal(r);return !!f&&f!=='S'&&f!==baseOf(r);}
 function memberReasonOk(r){return !memberChanged(r)||((FD.adj[r.email]||{}).reason||'').trim().length>0;}
-function teamChanged(T){const d=FD.team[T.team];return !!(d&&d.grade&&(T.direct||d.grade!==g1of(T.lead)));}
-function teamReasonOk(T){if(T.direct)return !!teamFinalOf(T);const d=FD.team[T.team];return !(d&&d.grade&&d.grade!==g1of(T.lead))||((d.reason||'').trim().length>0);}
+function teamChanged(T){const d=FD.team[T.team];return !!(d&&d.grade&&(T.direct||d.grade!==baseOf(T.lead)));}
+function teamReasonOk(T){if(T.direct)return !!teamFinalOf(T);const d=FD.team[T.team];return !(d&&d.grade&&d.grade!==baseOf(T.lead))||((d.reason||'').trim().length>0);}
 function teamAvgOf(T,fn){const fs=T.members.map(fn).filter(g=>g&&g!=='S').map(g=>FACTOR[g]);return fs.length?fs.reduce((a,b)=>a+b,0)/fs.length:null;}
-function poolOkFor(T){const P=poolTeams(T.execName);if(P.length<2)return false;const a=avgOf(P.flatMap(t=>t.members),memberFinal);return a==null||a<=1.0009;}   // 같은 임원 담당 팀 합산
+function poolOkFor(T){const P=poolTeams(T.execName);if(P.length<2)return false;const a=avgOf(P.flatMap(pm),poolFinal);return a==null||a<=1.0009;}   // 같은 임원 담당 팀 합산
 function teamOverOk(T){const a=teamAvgOf(T,memberFinal);return a==null||a<=1.0009||poolOkFor(T)||((FD.over[T.team]||'').trim().length>0);}
 function finFlags(r){const x=subRec(r);if(!x)return['미제출'];const i=infoOf(r);const f=[];if(i.reco&&i.reco!==x.grade)f.push(`추천 ${i.reco} ≠ ${x.grade}`);if(x.grade==='C')f.push('C 등급');return f;}
 function sCap(){return Math.max(0,Math.floor(evaluees().length*S_CAP_RATIO));}
@@ -2109,7 +2109,7 @@ function renderFinal(){
   const L=finConfirmed();const cap=sCap();const teams=finTeams();const ev=evaluees();
   const pendM=ev.filter(r=>!r.teamLead&&!subRec(r)).length,pendL=ev.filter(r=>r.teamLead&&!subRec(r)).length;
   const byExec={};teams.forEach(T=>{const k=T.direct?'대표이사':T.execName;(byExec[k]=byExec[k]||[]).push(T);});
-  const chips=Object.entries(byExec).map(([e,ts])=>`<span class="fin-chip"><b>${esc(e)}</b> ${ts.map(T=>{const g=T.direct?teamFinalOf(T):g1of(T.lead);return `${esc(T.team)} <span class="gd ${g}">${g||'-'}</span>`;}).join(' · ')}</span>`).join('');
+  const chips=Object.entries(byExec).map(([e,ts])=>`<span class="fin-chip"><b>${esc(e)}</b> ${ts.map(T=>{const g=T.direct?teamFinalOf(T):baseOf(T.lead);return `${esc(T.team)} <span class="gd ${g}">${g||'-'}</span>`;}).join(' · ')}</span>`).join('');
   const cards=teams.map(T=>{
     const lx=T.lead&&subRec(T.lead);const tg=teamFinalOf(T);const d=FD.team[T.team]||{};const avg=teamAvgOf(T,memberFinal),avg1=teamAvgOf(T,g1of);
     const rows=T.members.map(r=>{
@@ -2166,7 +2166,7 @@ function renderFinal(){
     else if(v===baseOf(r))delete FD.adj[em];else FD.adj[em]={grade:v,reason:(FD.adj[em]||{}).reason||''};dirty();});
   box.querySelectorAll('input[data-mr]').forEach(i=>i.onchange=()=>{FD.adj[i.dataset.mr].reason=i.value;dirty();});
   box.querySelectorAll('select[data-t]').forEach(s=>s.onchange=()=>{const T=teams.find(x=>x.team===s.dataset.t);const prev=FD.team[T.team]||{};
-    if(!T.direct&&s.value===g1of(T.lead))delete FD.team[T.team];else FD.team[T.team]={grade:s.value,reason:prev.reason||''};dirty();});
+    if(!T.direct&&s.value===baseOf(T.lead))delete FD.team[T.team];else FD.team[T.team]={grade:s.value,reason:prev.reason||''};dirty();});
   box.querySelectorAll('input[data-tr]').forEach(i=>i.onchange=()=>{FD.team[i.dataset.tr].reason=i.value;dirty();});
   box.querySelectorAll('input[data-over]').forEach(i=>i.onchange=()=>{FD.over[i.dataset.over]=i.value;dirty();});
   document.getElementById('fin_onlyex').onchange=e=>{FIN_ONLYEX=e.target.checked;keepFinScroll(renderFinal);};
@@ -2181,7 +2181,7 @@ function renderFinal(){
 function openComboModal(team){
   const T=finTeams().find(x=>x.team===team);if(!T)return;
   const bl=[comboBlock(T.team,T.members,memberFinal)];const P=poolTeams(T.execName);
-  if(P.length>=2)bl.push(comboBlock(`${T.execName} 담당 팀 합산 (${P.map(t=>t.team).join(' + ')})`,P.flatMap(t=>t.members),memberFinal));
+  if(P.length>=2)bl.push(comboBlock(`${T.execName} 담당 팀 합산 (${P.map(t=>t.team).join(' + ')})`,P.flatMap(pm),poolFinal));
   showComboModal(T.team,bl);
 }
 /* 최종 확정: 한 사람의 어필시트 + 평가(항목별 등급·근거·피드백) 전체 보기 */
@@ -2213,13 +2213,15 @@ function openDetailModal(email){
    대표이사 화면은 임원 조정 등급을 기준(1차 → 임원 → 대표이사)으로 보여 준다. */
 function execAdjRec(r){const x=finRec('임원조정',r.email);return finActive(x)&&x.grade?x:null;}
 function baseOf(r){const x=execAdjRec(r);return x?x.grade:g1of(r);}
-function poolTeams(execName){return finTeams().filter(T=>T.execName===execName&&T.members.length);}
+function pm(T){return T.members.length?T.members:(T.lead?[T.lead]:[]);}   // 팀원 없는 팀은 팀장 1명이 그 팀
+function poolTeams(execName){return finTeams().filter(T=>T.execName===execName&&pm(T).length);}
+function poolFinal(r){if(!r.teamLead)return memberFinal(r);const T=finTeams().find(t=>t.lead===r);return T?teamFinalOf(T):baseOf(r);}
 function execEmailOf(name){return(ROSTER.find(p=>p.name===name)||{}).email||'';}
 function execDone(name){const x=finRec('임원조율완료','exec:'+execEmailOf(name));return !!(x&&x.status==='완료');}
 function coordTeams(name){return name?poolTeams(name):[];}
 function isCoordinator(){const me=currentUser&&currentUser.me;return !!(me&&me.group==='임원'&&!currentUser.isCEO&&isV2()&&coordTeams(varName).length);}
 let XD=null, XD_DIRTY=false;
-function coordLoad(){XD={adj:{}};coordTeams(varName).forEach(T=>T.members.forEach(r=>{const x=finRec('임원조정',r.email);if(finActive(x)&&x.grade)XD.adj[r.email]={grade:x.grade,reason:x.comment||''};}));XD_DIRTY=false;}
+function coordLoad(){XD={adj:{}};coordTeams(varName).forEach(T=>pm(T).forEach(r=>{const x=finRec('임원조정',r.email);if(finActive(x)&&x.grade)XD.adj[r.email]={grade:x.grade,reason:x.comment||''};}));XD_DIRTY=false;}
 function coordGrade(r){const a=XD&&XD.adj[r.email];return a&&a.grade?a.grade:g1of(r);}
 const STEP={A:['A','B'],B:['A','B','C'],C:['B','C']};
 function avgOf(list,fn){const fs=list.map(fn).filter(g=>g&&g!=='S').map(g=>FACTOR[g]);return fs.length?fs.reduce((a,b)=>a+b,0)/fs.length:null;}
@@ -2231,22 +2233,22 @@ function renderCoord(){
   const teams=coordTeams(varName);if(!teams.length){box.innerHTML='<div class="empty">조율할 담당 팀이 없습니다.</div>';return;}
   if(!XD)coordLoad();
   const done=execDone(varName);const L=done||finConfirmed();
-  const all=teams.flatMap(T=>T.members);const readable=all.filter(r=>subRec(r)).length;
+  const all=teams.flatMap(T=>pm(T));const readable=all.filter(r=>subRec(r)).length;
   const pend=all.filter(r=>!subRec(r)).length;
   const pAvg=avgOf(all,coordGrade),p1=avgOf(all,g1of);const pc=cntOf(all,coordGrade);
   const multi=teams.length>=2;
   const changed=r=>{const g=coordGrade(r);return !!g&&g!==g1of(r);};
   const reasonOk=r=>!changed(r)||((XD.adj[r.email]||{}).reason||'').trim().length>0;
   const cards=teams.map(T=>{
-    const avg=avgOf(T.members,coordGrade),a1=avgOf(T.members,g1of);
-    const rows=T.members.map(r=>{const x=subRec(r);const i=infoOf(r);const g=coordGrade(r);const ch=changed(r);const g1=x?x.grade:'';
+    const avg=avgOf(pm(T),coordGrade),a1=avgOf(pm(T),g1of);
+    const rows=pm(T).map(r=>{const x=subRec(r);const i=infoOf(r);const g=coordGrade(r);const ch=changed(r);const g1=x?x.grade:'';
       return `<tr class="${ch?'chg':''}"><td><b class="fdet" data-det="${esc(r.email)}" title="눌러서 어필시트·피드백 전체 보기">${esc(r.name)}</b> <span class="hint">${esc(r.rank)}</span></td>
         <td style="text-align:center">${x?`<span class="gd ${g1}">${g1}</span>`:'-'}</td>
         <td>${i.score!=null?Number(i.score).toFixed(2):'-'} <span class="hint">추천 ${i.reco||'-'}</span></td>
         <td class="fcmt fdet" data-det="${esc(r.email)}" title="눌러서 어필시트·피드백 전체 보기">${esc(x?x.comment:'미제출')}</td>
         <td><select class="fsel" data-x="${esc(r.email)}" ${L||!x?'disabled':''}>${(STEP[g1]||[g1]).map(o=>`<option value="${o}" ${g===o?'selected':''}>${o}${o===g1?' (1차)':''}</option>`).join('')}</select></td>
         <td>${ch?`<input class="tx fin-in" data-xr="${esc(r.email)}" placeholder="조정 사유 (필수)" value="${esc((XD.adj[r.email]||{}).reason||'')}" ${L?'disabled':''}>`:''}</td></tr>`;}).join('');
-    return `<div class="fin-team"><div class="fin-th"><div><b class="fin-tn">${esc(T.team)}</b> <span class="hint">${T.direct?'직할 팀':`팀장 ${esc(T.lead.name)} · 팀 등급 ${T.lead&&subRec(T.lead)?subRec(T.lead).grade:'-'}`}</span>
+    return `<div class="fin-team"><div class="fin-th"><div><b class="fin-tn">${esc(T.team)}</b> <span class="hint">${T.direct?'직할 팀':!T.members.length?`팀원 없음 · 팀장 ${esc(T.lead.name)}의 팀 평가 등급으로 계산`:`팀장 ${esc(T.lead.name)} · 팀 등급 ${T.lead&&subRec(T.lead)?subRec(T.lead).grade:'-'}`}</span>
         <button class="btn combo-btn" type="button" data-xcombo="${esc(T.team)}">경우의 수</button></div></div>
       <div class="fin-stat">팀원 가중평균 <b class="${avg!=null&&avg>1.0009&&!multi?'bad':''}">${pct(avg)}</b> <span class="hint">(1차 ${pct(a1)})${multi?' · 담당 팀 합산으로 맞추면 됩니다':''}</span></div>
       <div style="overflow:auto"><table class="fin"><thead><tr><th>팀원</th><th>1차</th><th>점수</th><th>1차 피드백</th><th>조율</th><th style="width:24%">사유</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;}).join('');
@@ -2274,7 +2276,7 @@ function renderCoord(){
   box.querySelectorAll('[data-det]').forEach(b=>b.onclick=()=>openDetailModal(b.dataset.det));
   box.querySelectorAll('[data-xcombo]').forEach(b=>b.onclick=()=>{const k=b.dataset.xcombo;
     if(k==='__pool')showComboModal(`${varName} 담당 ${teams.length}개 팀 합산`,[comboBlock(`담당 팀 합산 (${teams.map(T=>T.team).join(' + ')})`,all,coordGrade)]);
-    else{const T=teams.find(x=>x.team===k);const bl=[comboBlock(T.team,T.members,coordGrade)];if(multi)bl.push(comboBlock(`담당 팀 합산 (${teams.map(t=>t.team).join(' + ')})`,all,coordGrade));showComboModal(T.team,bl);}});
+    else{const T=teams.find(x=>x.team===k);const bl=[comboBlock(T.team,pm(T),coordGrade)];if(multi)bl.push(comboBlock(`담당 팀 합산 (${teams.map(t=>t.team).join(' + ')})`,all,coordGrade));showComboModal(T.team,bl);}});
   const sv=document.getElementById('co_save');if(sv)sv.onclick=()=>coordSave(false);
   const dn=document.getElementById('co_done');if(dn)dn.onclick=()=>coordSave(true);
   const ud=document.getElementById('co_undo');if(ud)ud.onclick=async()=>{if(!confirm('조율 완료를 취소할까요? 다시 조율할 수 있게 됩니다.'))return;
@@ -2285,7 +2287,7 @@ async function coordSave(andDone){
   document.querySelectorAll('#co_save,#co_done').forEach(b=>b.disabled=true);
   try{
     await refreshGraphToken();
-    for(const T of coordTeams(varName))for(const r of T.members){
+    for(const T of coordTeams(varName))for(const r of pm(T)){
       const ex=finRec('임원조정',r.email);const a=XD.adj[r.email];
       if(a&&a.grade&&a.grade!==g1of(r))await finUpsert('임원조정',r.email,{name:r.name,team:r.team,grade:a.grade,reason:a.reason||'',extra:{type:'exec',from:g1of(r)}});
       else if(finActive(ex))await finUpsert('임원조정',r.email,{name:r.name,team:r.team,grade:'',reason:'',status:'취소'});
@@ -2328,7 +2330,7 @@ function finTable(teams){
   const rows=[];
   teams.forEach(T=>{const tg=teamFinalOf(T);
     rows.push(`<tr class="gh"><td colspan="5">${esc(T.team)} · 팀 등급 ${tg||'-'}${T.direct?' · 임원 직할':''}</td></tr>`);
-    if(T.lead){const g=g1of(T.lead);rows.push(`<tr><td><b>${esc(T.lead.name)}</b> <span class="hint">팀장 · 팀 평가</span></td><td>${g||'-'}</td><td><b>${tg}</b></td><td>${tg?Math.round(FACTOR[tg]*100)+'%':'-'}</td><td class="hint">${tg!==g?'대표이사 조정: '+esc((FD.team[T.team]||{}).reason||''):''}</td></tr>`);}
+    if(T.lead){const g=baseOf(T.lead);rows.push(`<tr><td><b>${esc(T.lead.name)}</b> <span class="hint">팀장 · 팀 평가</span></td><td>${g||'-'}</td><td><b>${tg}</b></td><td>${tg?Math.round(FACTOR[tg]*100)+'%':'-'}</td><td class="hint">${tg!==g?'대표이사 조정: '+esc((FD.team[T.team]||{}).reason||''):''}</td></tr>`);}
     T.members.forEach(r=>{const g=g1of(r),f=memberFinal(r);rows.push(`<tr><td>${esc(r.name)} <span class="hint">${esc(r.rank)} · 1차</span></td><td>${g||'-'}</td><td><b>${f||'-'}</b></td><td>${f?Math.round(FACTOR[f]*100)+'%':'-'}</td><td class="hint">${f==='S'?'S 부여 (별도 재원)':f!==g?'대표이사 조정: '+esc((FD.adj[r.email]||{}).reason||''):''}</td></tr>`);});
   });
   return `<div style="overflow:auto;margin-top:12px"><table class="fin"><thead><tr><th>이름</th><th>1차·팀 평가</th><th>최종</th><th>지급률</th><th>비고</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
@@ -2357,7 +2359,7 @@ async function finSave(andConfirm){
     }
     for(const T of finTeams()){
       const k='team:'+T.team;const ex=finRec('팀등급',k);
-      if(teamChanged(T))await finUpsert('팀등급',k,{name:T.team,team:T.team,grade:teamFinalOf(T),reason:(FD.team[T.team]||{}).reason||'',extra:{type:'team',from:T.lead?g1of(T.lead):''}});
+      if(teamChanged(T))await finUpsert('팀등급',k,{name:T.team,team:T.team,grade:teamFinalOf(T),reason:(FD.team[T.team]||{}).reason||'',extra:{type:'team',from:T.lead?baseOf(T.lead):''}});
       else if(finActive(ex))await finUpsert('팀등급',k,{name:T.team,team:T.team,grade:'',reason:'',status:'취소'});
       const ox=finRec('팀예외',k);const ov=(FD.over[T.team]||'').trim();
       if(ov)await finUpsert('팀예외',k,{name:T.team,team:T.team,reason:ov});else if(finActive(ox))await finUpsert('팀예외',k,{name:T.team,team:T.team,reason:'',status:'취소'});
